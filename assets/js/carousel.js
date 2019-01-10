@@ -2,7 +2,7 @@
 //  TODO:
 //    - Handle Next/Previous properly
 //      - Transition
-//    - Ignore subsequent touches after first (https://stackoverflow.com/questions/49541173/how-to-prevent-default-handling-of-touch-events)
+//    - Ignore subsequent touches after first
 //    - Convert the px to % based for continuity
 //  Goal: make TouchControls reusable for other similar assets
 class TouchControls {
