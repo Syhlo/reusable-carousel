@@ -1,17 +1,14 @@
-//  **Very** Work in Progress
-
-//TODO          SwipeControl
-//?          Base Functionality
-//*     - Handle Next/Previous properly
+//?             SwipeControl
+//TODO      Base Functionality
+//*      - Handle Next/Previous properly
 //*         - Transition
 //*     - Ignore subsequent touches after first
 //*     - Look into .throttle and .debounce
 //*     - MutationObserver to keep asset and SwipeControl items in line
 
-//?          Optional Settings
+//TODO      Optional Settings
 //*     - Arrow Overlay: Create arrows that show when threshold was reached.
 //*         - Potentially disable the slide being moved
-
 //?  Goal: make SwipeControl reusable for similar assets
 
 class SwipeControl {
@@ -89,8 +86,7 @@ class SwipeControl {
 
     }
 
-
-    //              Controls
+    //             Controls
     moveLeft() {
         const threshold = 100 / 5;
         //  Difference is more than threshold, current item isn't last item
@@ -151,14 +147,14 @@ class SwipeControl {
 }
 
 
-//TODO          Carousel
-//?         Base Functionality
+//?             Carousel
+//TODO      Base Functionality
 //*     - Finish touch controls
 //*     - MutationObserver to keep asset and SwipeControl items & active item in line
-//*     - Allow for custom width/height (I might use SCSS for this)
 
-//?         Optional Settings
+//TODO      Optional Settings
 //*     - Take in an object to enable/disable features
+//*     - Allow for custom width/height (I might use SCSS for this)
 //*     - Create optional mouse dragging controls (?)
 //*     - Create an optional 'auto-play' start/stop feature (timeIntervals)
 //*     - Create optional next/previous
