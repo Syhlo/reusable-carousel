@@ -3,20 +3,14 @@
 //    - Handle Next/Previous properly
 //      - Transition
 //      - Add or remove 100% (Save the current slide before modifying)
-//        ^ Almost done with moving to the right, also added a lastItem stopper.
 //        ^ Update: Moving to right is done. Need to add moving back ^ handle right swipes.
-//      - Start swipe from current image
 //  Goal: make TouchControls reusable for other similar assets
-
-//  Maybe just set this.current to 1, 2.. etc. this.current++?
-//  Line 44 is brutal.. I'm new to this. Anyone reading this, go easy on me. :(
-//  This needs a serious refaction when I'm not so tired.
 class TouchControls {
     constructor(element, amountOfItems) {
         this.element = element;
         this.initialX;
         this.difference;
-        this.current = 0;
+        this.currentItem = 0;
         this.lastItem = -((amountOfItems - 1) * 100);
         this.attachListeners(element);
     }
@@ -33,45 +27,51 @@ class TouchControls {
 
     move(event) {
         const touch = event.touches[0].clientX;
+        const slideX = this.currentItem * this.element.clientWidth;
         let moveX = this.initialX - touch;
-        const movable = moveX < this.element.clientWidth;
-        const slideX = this.current * this.element.clientWidth;
+        let movable = moveX < this.element.clientWidth;
 
         //  First move: No difference, X moved greater than 0, and slide is movable.
         if (!this.difference && moveX > 0 && movable) {
             this.element.style.left = -moveX + 'px';
         }
-        // Subsequent moves: Current exists
-        else if (this.current) {
-            // Current item isn't the last item
-            if (-(this.current * 100) !== this.lastItem) {
+        //  Subsequent moves: Current exists
+        else if (this.currentItem) {
+            //  Current item isn't the last item
+            if (-(this.currentItem * 100) !== this.lastItem) {
                 this.element.style.left = -slideX - moveX + 'px';
             }
         }
+        console.log(slideX)
 
     }
 
     end(event) {
         const threshold = this.element.clientWidth / 4;
         this.difference = this.initialX - event.changedTouches[0].clientX;
-        //  Difference is more than threshold, 
-        if (this.difference > threshold && -(this.current * 100) !== this.lastItem) {
+        //  Difference is more than threshold, current item isn't last item
+        if (this.difference > threshold && -(this.currentItem * 100) !== this.lastItem) {
             this.next();
-        } else if (threshold > this.difference && !(this.current * 100)) {
+        }
+        //  Threshold is greater than difference in X, currentItem doesn't exist
+        else if (threshold > this.difference && !this.currentItem) {
             this.element.style.left = 0 + '%';
             this.difference = 0;
+        } else {
+            console.log()
+            this.element.style.left = -(this.currentItem * 100) + '%';
         }
         this.console()
 
     }
 
     next() {
-        if (!this.current) {
+        if (!this.currentItem) {
             this.element.style.left = -100 + '%';
-            this.current += 1;
-        } else if (this.current) {
-            this.element.style.left = -(this.current * 100) - 100 + '%';
-            this.current += 1;
+            this.currentItem += 1;
+        } else if (this.currentItem) {
+            this.element.style.left = -(this.currentItem * 100) - 100 + '%';
+            this.currentItem += 1;
         }
     }
 
@@ -86,7 +86,7 @@ class TouchControls {
         console.log(this.element);
         console.log('initialX: ' + this.initialX);
         console.log('difference: ' + this.difference);
-        console.log('current: ' + this.current);
+        console.log('current: ' + this.currentItem);
         console.log('lastItem: ' + this.lastItem);
         console.log('left: ' + this.element.style.left)
         console.log('-------------------')
@@ -113,7 +113,7 @@ class Carousel {
             this.carousel.getElementsByClassName('inner')[0];
         this.imageAmount =
             this.inner.getElementsByTagName('img').length;
-        this.currentImage = 0;
+        this.currentItemImage = 0;
 
         //  Selection variables
         this.imageSelector =
@@ -147,7 +147,7 @@ class Carousel {
         //  On bubble click switch to that image
         for (let i = 0; i < this.bubbles.length; i++) {
             this.bubbles[i].addEventListener("click", () => {
-                this.currentImage = i;
+                this.currentItemImage = i;
                 this.switchImage();
                 this.activeBubble();
             });
@@ -158,13 +158,13 @@ class Carousel {
 
     //  Switch to desired image  
     switchImage() {
-        this.inner.style.left = -this.width * this.currentImage + "%";
+        this.inner.style.left = -this.width * this.currentItemImage + "%";
     }
 
     //  Which bubble is active?  
     activeBubble() {
         this.bubbles.forEach((bubble, index) => {
-            if (index === this.currentImage) {
+            if (index === this.currentItemImage) {
                 bubble.children[0].classList.add("bubble-active");
             } else {
                 bubble.children[0].classList.remove("bubble-active");
