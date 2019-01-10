@@ -5,6 +5,7 @@
 //    - Handle Next/Previous properly
 //      - Transition
 //    - Ignore subsequent touches after first
+//    - MutationObserver to keep asset and SwipeControl items in line
 //
 //          Optional Settings
 //    - Arrow Overlay: Stop 'moving' the slide. Create arrows that show when threshold was reached..
@@ -27,7 +28,7 @@ class SwipeControl {
         element.addEventListener('touchend', (event) => this.end(event), { passive: false });
     }
 
-    //              Listener Events
+    //              Listener Events (TouchEvent)
     start(event) {
         if (!this.touched) {
             // Initial X of touch value
@@ -46,7 +47,7 @@ class SwipeControl {
         let moveX = this.initialX - touch; //   move slide by X
         let movable = moveX < this.element.clientWidth; //  Prevent sliding too far
 
-        //  First move: currentItem is falsy & X moved greater than 0 & slide is movable.
+        //  First move: currentItem is falsy & moveX is positive & slide is still movable.
         if (!this.currentItem && moveX > 0 && movable) {
             this.element.style.left = -moveX + 'px';
         }
@@ -151,7 +152,7 @@ class SwipeControl {
 //  TODO:
 //          Base Functionality
 //    - Finish touch controls
-//    - Update Carousel active when changed via SwipeControl (MutationObserver?)
+//    - MutationObserver to keep asset and SwipeControl items & active item in line
 //    - Allow for custom width/height (I might use SCSS for this)
 
 //          Optional Settings
