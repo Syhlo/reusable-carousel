@@ -1,16 +1,19 @@
 //  **Very** Work in Progress
-//  TODO:
-//          Base Functionality
-//    - Convert the px to % based for continuity
-//    - Handle Next/Previous properly
-//      - Transition
-//    - Ignore subsequent touches after first
-//    - MutationObserver to keep asset and SwipeControl items in line
-//
-//          Optional Settings
-//    - Arrow Overlay: Stop 'moving' the slide. Create arrows that show when threshold was reached..
-//
-//  Goal: make SwipeControl reusable for similar assets
+
+//TODO          SwipeControl
+//?          Base Functionality
+//*     - Handle Next/Previous properly
+//*         - Transition
+//*     - Ignore subsequent touches after first
+//*     - Look into .throttle and .debounce
+//*     - MutationObserver to keep asset and SwipeControl items in line
+
+//?          Optional Settings
+//*     - Arrow Overlay: Create arrows that show when threshold was reached.
+//*         - Potentially disable the slide being moved
+
+//?  Goal: make SwipeControl reusable for similar assets
+
 class SwipeControl {
     constructor(element, amountOfItems) {
         this.element = element;
@@ -31,8 +34,9 @@ class SwipeControl {
     //              Listener Events (TouchEvent)
     start(event) {
         if (!this.touched) {
-            // Initial X of touch value
-            this.initialX = event.touches[0].clientX;
+            // Initial touch position
+            this.initialX = event.touches[0].clientX / 10;
+
             //  Disable default functionality, propagation, and disable new touches
             event.preventDefault();
             this.touched = true;
@@ -42,31 +46,32 @@ class SwipeControl {
 
     move(event) {
         event.preventDefault();
-        const touch = event.touches[0].clientX; //  current touch position
-        const slideX = this.currentItem * this.element.clientWidth; //  current slide
-        let moveX = this.initialX - touch; //   move slide by X
-        let movable = moveX < this.element.clientWidth; //  Prevent sliding too far
+        const touch = event.touches[0].clientX / 2;   //  Current touch position
+        const slideX = this.currentItem * 100;        //  Current slide
+        let moveX = this.initialX - touch / 5;        //  'Move slide by' value
+        let movable = moveX < 100;                    //  Prevent sliding too far
+        console.log(touch, moveX)
 
         //  First move: currentItem is falsy & moveX is positive & slide is still movable.
         if (!this.currentItem && moveX > 0 && movable) {
-            this.element.style.left = -moveX + 'px';
+            this.element.style.left = -moveX + '%';
         }
         //  Subsequent moves: Current exists
         else if (this.currentItem) {
             //  Current item isn't the last item
             if (-(this.currentItem * 100) !== this.lastItem && movable) {
-                this.element.style.left = -slideX - moveX + 'px';
+                this.element.style.left = -slideX - moveX + '%';
             }
             // Current item is last item and moveX is negative
             else if (-(this.currentItem * 100) === this.lastItem && moveX < 0) {
-                this.element.style.left = -slideX - moveX + 'px';
+                this.element.style.left = -slideX - moveX + '%';
             }
         }
     }
 
     end(event) {
         event.preventDefault();
-        this.difference = this.initialX - event.changedTouches[0].clientX;
+        this.difference = this.initialX - (event.changedTouches[0].clientX / 10);
         //  Difference is positive
         if (this.difference > 0) {
             this.moveLeft();
@@ -80,14 +85,14 @@ class SwipeControl {
         this.touched = false;
 
         //  Display global variable information
-        this.console();
+        // this.console();
 
     }
 
 
     //              Controls
     moveLeft() {
-        const threshold = this.element.clientWidth / 5;
+        const threshold = 100 / 5;
         //  Difference is more than threshold, current item isn't last item
         if (this.difference > threshold && -(this.currentItem * 100) !== this.lastItem) {
             this.next();
@@ -95,21 +100,18 @@ class SwipeControl {
         //  Threshold is greater than difference in X, currentItem doesn't exist
         else if (threshold > this.difference) {
             this.element.style.left = -(this.currentItem * 100) + '%';
-            this.difference = 0;
         }
     }
 
     moveRight() {
-        const threshold = -(this.element.clientWidth / 3.5);
+        const threshold = -(100 / 5);
         //  Threshold is greater than difference, currentItem is not the first
         if (threshold > this.difference && this.currentItem !== 0) {
             this.prev();
-            console.log('test')
         }
         //  Difference is greater than threshold
         else if (threshold < this.difference) {
             this.element.style.left = -(this.currentItem * 100) + '%';
-            this.difference = 0;
         }
     }
 
@@ -134,32 +136,33 @@ class SwipeControl {
 
     //              Development Purposes
     console() {
-        console.log(' ')
-        console.log('-------------------')
+        console.log(' ');
+        console.log('-------------------');
         console.log(this.element);
         console.log('initialX: ' + this.initialX);
         console.log('difference: ' + this.difference);
         console.log('current: ' + this.currentItem);
         console.log('lastItem: ' + this.lastItem);
-        console.log('left: ' + this.element.style.left)
-        console.log('-------------------')
+        console.log('left: ' + this.element.style.left);
+        console.log('-------------------');
 
     }
 
 }
 
 
-//  TODO:
-//          Base Functionality
-//    - Finish touch controls
-//    - MutationObserver to keep asset and SwipeControl items & active item in line
-//    - Allow for custom width/height (I might use SCSS for this)
+//TODO          Carousel
+//?         Base Functionality
+//*     - Finish touch controls
+//*     - MutationObserver to keep asset and SwipeControl items & active item in line
+//*     - Allow for custom width/height (I might use SCSS for this)
 
-//          Optional Settings
-//    - Take in an object to enable/disable features
-//    - Create optional mouse dragging controls (?)
-//    - Create an optional 'auto-play' start/stop feature (timeIntervals)
-//    - Create optional next/previous
+//?         Optional Settings
+//*     - Take in an object to enable/disable features
+//*     - Create optional mouse dragging controls (?)
+//*     - Create an optional 'auto-play' start/stop feature (timeIntervals)
+//*     - Create optional next/previous
+//*     - Optionally disable bubbles
 class Carousel {
     constructor(index) {
         //  Carousel variables
