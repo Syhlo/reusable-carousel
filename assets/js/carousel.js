@@ -27,22 +27,24 @@ class SwipeControl {
         element.addEventListener('touchend', (event) => this.end(event), { passive: false });
     }
 
-    //          Listener Events
+    //              Listener Events
     start(event) {
         if (!this.touched) {
+            // Initial X of touch value
+            this.initialX = event.touches[0].clientX;
+            //  Disable default functionality, propagation, and disable new touches
             event.preventDefault();
             this.touched = true;
-            this.initialX = event.touches[0].clientX;
             event.stopImmediatePropagation();
         }
     }
 
     move(event) {
         event.preventDefault();
-        const touch = event.touches[0].clientX; // current touch position
-        const slideX = this.currentItem * this.element.clientWidth; // current slide
-        let moveX = this.initialX - touch; // move slide by X
-        let movable = moveX < this.element.clientWidth; // Prevent moving too far
+        const touch = event.touches[0].clientX; //  current touch position
+        const slideX = this.currentItem * this.element.clientWidth; //  current slide
+        let moveX = this.initialX - touch; //   move slide by X
+        let movable = moveX < this.element.clientWidth; //  Prevent sliding too far
 
         //  First move: currentItem is falsy & X moved greater than 0 & slide is movable.
         if (!this.currentItem && moveX > 0 && movable) {
@@ -54,6 +56,7 @@ class SwipeControl {
             if (-(this.currentItem * 100) !== this.lastItem && movable) {
                 this.element.style.left = -slideX - moveX + 'px';
             }
+            // Current item is last item and moveX is negative
             else if (-(this.currentItem * 100) === this.lastItem && moveX < 0) {
                 this.element.style.left = -slideX - moveX + 'px';
             }
@@ -63,14 +66,19 @@ class SwipeControl {
     end(event) {
         event.preventDefault();
         this.difference = this.initialX - event.changedTouches[0].clientX;
+        //  Difference is positive
         if (this.difference > 0) {
             this.moveLeft();
         }
+        //  Difference is negative
         else if (this.difference < 0) {
             this.moveRight();
         }
+
+        //  Enable receiving new touches
         this.touched = false;
-        // Gather global variable information
+
+        //  Display global variable information
         this.console();
 
     }
@@ -92,11 +100,12 @@ class SwipeControl {
 
     moveRight() {
         const threshold = -(this.element.clientWidth / 3.5);
-
+        //  Threshold is greater than difference, currentItem is not the first
         if (threshold > this.difference && this.currentItem !== 0) {
             this.prev();
             console.log('test')
         }
+        //  Difference is greater than threshold
         else if (threshold < this.difference) {
             this.element.style.left = -(this.currentItem * 100) + '%';
             this.difference = 0;
@@ -117,10 +126,12 @@ class SwipeControl {
     }
 
     prev() {
+        //  Previous slide
         this.element.style.left = -(this.currentItem * 100) + 100 + '%';
         this.currentItem -= 1;
     }
 
+    //              Development Purposes
     console() {
         console.log(' ')
         console.log('-------------------')
