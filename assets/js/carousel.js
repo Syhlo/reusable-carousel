@@ -3,6 +3,7 @@
 //    - Handle Next/Previous properly
 //      - Transition
 //    - Ignore subsequent touches after first (https://stackoverflow.com/questions/49541173/how-to-prevent-default-handling-of-touch-events)
+//    - Convert the px to % based for continuity
 //  Goal: make TouchControls reusable for other similar assets
 class TouchControls {
     constructor(element, amountOfItems) {
@@ -11,7 +12,7 @@ class TouchControls {
         this.difference;
         this.currentItem = 0;
         this.lastItem = -((amountOfItems - 1) * 100);
-        this.active = false;
+        this.touched = false;
         this.attachListeners(element);
     }
 
@@ -23,9 +24,12 @@ class TouchControls {
 
     //          Listener Events
     start(event) {
-        event.preventDefault();
-        this.initialX = event.touches[0].clientX;
-        event.stopImmediatePropagation();
+        if (!this.touched) {
+            event.preventDefault();
+            this.touched = true;
+            this.initialX = event.touches[0].clientX;
+            event.stopImmediatePropagation();
+        }
     }
 
     move(event) {
@@ -58,10 +62,11 @@ class TouchControls {
             this.moveLeft();
         }
         else if (this.difference < 0) {
-            this.moveRight()
+            this.moveRight();
         }
+        this.touched = false;
         // Gather global variable information
-        this.console()
+        this.console();
 
     }
 
