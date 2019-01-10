@@ -1,11 +1,16 @@
 //  **Very** Work in Progress
 //  TODO:
+//          Base Functionality
+//    - Convert the px to % based for continuity
 //    - Handle Next/Previous properly
 //      - Transition
 //    - Ignore subsequent touches after first
-//    - Convert the px to % based for continuity
-//  Goal: make TouchControls reusable for other similar assets
-class TouchControls {
+//
+//          Optional Settings
+//    - Arrow Overlay: Stop 'moving' the slide. Create arrows that show when threshold was reached..
+//
+//  Goal: make SwipeControl reusable for similar assets
+class SwipeControl {
     constructor(element, amountOfItems) {
         this.element = element;
         this.initialX;
@@ -133,13 +138,16 @@ class TouchControls {
 
 
 //  TODO:
+//          Base Functionality
 //    - Finish touch controls
-//    - Update Carousel active when changed via touch controls (MutationObserver?)
-//    - Create mouse dragging controls?
-//    - Create an optional 'auto-play' start/stop feature (easy, timeIntervals)
-//    - Create optional next/previous?
-//    - Maybe loop the carousel?
-//    - Allow for custom width/height (debating if I want to do this in JS.. you know, separation and everything)
+//    - Update Carousel active when changed via SwipeControl (MutationObserver?)
+//    - Allow for custom width/height (I might use SCSS for this)
+
+//          Optional Settings
+//    - Take in an object to enable/disable features
+//    - Create optional mouse dragging controls (?)
+//    - Create an optional 'auto-play' start/stop feature (timeIntervals)
+//    - Create optional next/previous
 class Carousel {
     constructor(index) {
         //  Carousel variables
@@ -189,7 +197,7 @@ class Carousel {
             });
         }
         //  Initiate touch controls
-        new TouchControls(this.inner, this.imageAmount);
+        new SwipeControl(this.inner, this.imageAmount);
     }
 
     //  Switch to desired image  
