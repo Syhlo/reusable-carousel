@@ -2,6 +2,7 @@
 //  TODO:
 //    - Handle Next/Previous properly
 //      - Transition
+//    - Ignore subsequent touches after first (https://stackoverflow.com/questions/49541173/how-to-prevent-default-handling-of-touch-events)
 //  Goal: make TouchControls reusable for other similar assets
 class TouchControls {
     constructor(element, amountOfItems) {
@@ -10,26 +11,29 @@ class TouchControls {
         this.difference;
         this.currentItem = 0;
         this.lastItem = -((amountOfItems - 1) * 100);
+        this.active = false;
         this.attachListeners(element);
     }
 
     attachListeners(element) {
-        element.addEventListener('touchstart', (event) => this.start(event));
-        element.addEventListener('touchmove', (event) => this.move(event));
-        element.addEventListener('touchend', (event) => this.end(event));
+        element.addEventListener('touchstart', (event) => this.start(event), { passive: false });
+        element.addEventListener('touchmove', (event) => this.move(event), { passive: false });
+        element.addEventListener('touchend', (event) => this.end(event), { passive: false });
     }
 
     //          Listener Events
     start(event) {
+        event.preventDefault();
         this.initialX = event.touches[0].clientX;
+        event.stopImmediatePropagation();
     }
 
     move(event) {
+        event.preventDefault();
         const touch = event.touches[0].clientX; // current touch position
         const slideX = this.currentItem * this.element.clientWidth; // current slide
         let moveX = this.initialX - touch; // move slide by X
         let movable = moveX < this.element.clientWidth; // Prevent moving too far
-        console.log(moveX)
 
         //  First move: currentItem is falsy & X moved greater than 0 & slide is movable.
         if (!this.currentItem && moveX > 0 && movable) {
@@ -38,16 +42,17 @@ class TouchControls {
         //  Subsequent moves: Current exists
         else if (this.currentItem) {
             //  Current item isn't the last item
-            if (-(this.currentItem * 100) !== this.lastItem) {
+            if (-(this.currentItem * 100) !== this.lastItem && movable) {
                 this.element.style.left = -slideX - moveX + 'px';
             }
-            else if (-(this.currentItem * 100) === this.lastItem) {
+            else if (-(this.currentItem * 100) === this.lastItem && moveX < 0) {
                 this.element.style.left = -slideX - moveX + 'px';
             }
         }
     }
 
     end(event) {
+        event.preventDefault();
         this.difference = this.initialX - event.changedTouches[0].clientX;
         if (this.difference > 0) {
             this.moveLeft();
@@ -55,7 +60,6 @@ class TouchControls {
         else if (this.difference < 0) {
             this.moveRight()
         }
-
         // Gather global variable information
         this.console()
 
@@ -64,7 +68,7 @@ class TouchControls {
 
     //              Controls
     moveLeft() {
-        const threshold = this.element.clientWidth / 3.5;
+        const threshold = this.element.clientWidth / 5;
         //  Difference is more than threshold, current item isn't last item
         if (this.difference > threshold && -(this.currentItem * 100) !== this.lastItem) {
             this.next();
