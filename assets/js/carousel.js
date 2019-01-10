@@ -33,31 +33,33 @@ class TouchControls {
 
     move(event) {
         const touch = event.touches[0].clientX;
-        const movable = changeX < this.element.clientWidth;
+        let moveX = this.initialX - touch;
+        const movable = moveX < this.element.clientWidth;
         const slideX = this.current * this.element.clientWidth;
-        let changeX = this.initialX - touch;
 
-        if (!this.difference && changeX > 0 && movable) {
-            this.element.style.left = -changeX + 'px';
-        } else if (this.current) {
-            if ((this.current * 100) !== this.lastItem) {
-                this.element.style.left = -slideX - changeX + 'px';
+        //  First move: No difference, X moved greater than 0, and slide is movable.
+        if (!this.difference && moveX > 0 && movable) {
+            this.element.style.left = -moveX + 'px';
+        }
+        // Subsequent moves: Current exists
+        else if (this.current) {
+            // Current item isn't the last item
+            if (-(this.current * 100) !== this.lastItem) {
+                this.element.style.left = -slideX - moveX + 'px';
             }
         }
 
     }
 
     end(event) {
-        const threshold = this.element.clientWidth / 3;
+        const threshold = this.element.clientWidth / 4;
         this.difference = this.initialX - event.changedTouches[0].clientX;
-
-        if (this.difference > threshold && (this.current * 100) !== this.lastItem) {
+        //  Difference is more than threshold, 
+        if (this.difference > threshold && -(this.current * 100) !== this.lastItem) {
             this.next();
         } else if (threshold > this.difference && !(this.current * 100)) {
             this.element.style.left = 0 + '%';
             this.difference = 0;
-        } else {
-            this.element.style.left = (this.current * 100) + '%';
         }
         this.console()
 
@@ -78,12 +80,16 @@ class TouchControls {
     }
 
     console() {
-        console.log('element: ' + this.element);
+        console.log(' ')
+        console.log('Variables:')
+        console.log('-------------------')
+        console.log(this.element);
         console.log('initialX: ' + this.initialX);
         console.log('difference: ' + this.difference);
         console.log('current: ' + this.current);
         console.log('lastItem: ' + this.lastItem);
         console.log('left: ' + this.element.style.left)
+        console.log('-------------------')
 
     }
 
