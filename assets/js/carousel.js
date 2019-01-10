@@ -41,7 +41,7 @@ class TouchControls {
             if (-(this.currentItem * 100) !== this.lastItem) {
                 this.element.style.left = -slideX - moveX + 'px';
             }
-            else if (-(this.currentItem * 100) === this.lastItem && moveX < 0) {
+            else if (-(this.currentItem * 100) === this.lastItem) {
                 this.element.style.left = -slideX - moveX + 'px';
             }
         }
