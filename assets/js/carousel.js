@@ -2,8 +2,6 @@
 //  TODO:
 //    - Handle Next/Previous properly
 //      - Transition
-//      - Add or remove 100% (Save the current slide before modifying)
-//        ^ Update: Moving to right is done. Need to add moving back ^ handle right swipes.
 //  Goal: make TouchControls reusable for other similar assets
 class TouchControls {
     constructor(element, amountOfItems) {
@@ -21,18 +19,20 @@ class TouchControls {
         element.addEventListener('touchend', (event) => this.end(event));
     }
 
+    //          Listener Events
     start(event) {
         this.initialX = event.touches[0].clientX;
     }
 
     move(event) {
-        const touch = event.touches[0].clientX;
-        const slideX = this.currentItem * this.element.clientWidth;
-        let moveX = this.initialX - touch;
-        let movable = moveX < this.element.clientWidth;
+        const touch = event.touches[0].clientX; // current touch position
+        const slideX = this.currentItem * this.element.clientWidth; // current slide
+        let moveX = this.initialX - touch; // move slide by X
+        let movable = moveX < this.element.clientWidth; // Prevent moving too far
+        console.log(moveX)
 
-        //  First move: No difference, X moved greater than 0, and slide is movable.
-        if (!this.difference && moveX > 0 && movable) {
+        //  First move: currentItem is falsy & X moved greater than 0 & slide is movable.
+        if (!this.currentItem && moveX > 0 && movable) {
             this.element.style.left = -moveX + 'px';
         }
         //  Subsequent moves: Current exists
@@ -41,47 +41,74 @@ class TouchControls {
             if (-(this.currentItem * 100) !== this.lastItem) {
                 this.element.style.left = -slideX - moveX + 'px';
             }
+            else if (-(this.currentItem * 100) === this.lastItem && moveX < 0) {
+                this.element.style.left = -slideX - moveX + 'px';
+            }
         }
-        console.log(slideX)
-
     }
 
     end(event) {
-        const threshold = this.element.clientWidth / 4;
         this.difference = this.initialX - event.changedTouches[0].clientX;
+        if (this.difference > 0) {
+            this.moveLeft();
+        }
+        else if (this.difference < 0) {
+            this.moveRight()
+        }
+
+        // Gather global variable information
+        this.console()
+
+    }
+
+
+    //              Controls
+    moveLeft() {
+        const threshold = this.element.clientWidth / 3.5;
         //  Difference is more than threshold, current item isn't last item
         if (this.difference > threshold && -(this.currentItem * 100) !== this.lastItem) {
             this.next();
         }
         //  Threshold is greater than difference in X, currentItem doesn't exist
-        else if (threshold > this.difference && !this.currentItem) {
-            this.element.style.left = 0 + '%';
-            this.difference = 0;
-        } else {
-            console.log()
+        else if (threshold > this.difference) {
             this.element.style.left = -(this.currentItem * 100) + '%';
+            this.difference = 0;
         }
-        this.console()
+    }
 
+    moveRight() {
+        const threshold = -(this.element.clientWidth / 3.5);
+
+        if (threshold > this.difference && this.currentItem !== 0) {
+            this.prev();
+            console.log('test')
+        }
+        else if (threshold < this.difference) {
+            this.element.style.left = -(this.currentItem * 100) + '%';
+            this.difference = 0;
+        }
     }
 
     next() {
+        // First move: currentItem does not exist
         if (!this.currentItem) {
             this.element.style.left = -100 + '%';
             this.currentItem += 1;
-        } else if (this.currentItem) {
+        }
+        // Subsequent moves: currentItem exists
+        else if (this.currentItem) {
             this.element.style.left = -(this.currentItem * 100) - 100 + '%';
             this.currentItem += 1;
         }
     }
 
     prev() {
-
+        this.element.style.left = -(this.currentItem * 100) + 100 + '%';
+        this.currentItem -= 1;
     }
 
     console() {
         console.log(' ')
-        console.log('Variables:')
         console.log('-------------------')
         console.log(this.element);
         console.log('initialX: ' + this.initialX);
