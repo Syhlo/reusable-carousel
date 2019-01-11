@@ -255,12 +255,7 @@ class Carousel {
     }
 
     handleChange() {
-        let newSlide = this.inner.style.left
-        if (parseInt(newSlide.charAt(0)) === 0) {
-            this.currentItem = 0;
-        } else {
-            this.currentItem = parseInt(newSlide.charAt(1));
-        }
+        this.currentItem = parseInt(this.inner.style.left.replace(/\D/g, '')) / 100;
         this.activeBubble();
     }
 }
