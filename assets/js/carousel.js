@@ -11,13 +11,11 @@ function debounce(func, delay) {
 
 //?             SwipeControl
 //TODO      Base Functionality
-//*     - Only allow one point of contact with surface
-//*     - Look into .throttle and .debounce
-//*     - MutationObserver to keep asset and SwipeControl items in line
+//*     - Fix multi-touch 'skipping' slides
+//*     - .throttle and .debounce when applicable
 
 //TODO      Optional Settings
 //*     - Arrow Overlay: Create arrows that show when threshold was reached.
-//*         - Potentially disable the slide being moved
 //?  Goal: make SwipeControl reusable for similar assets
 class SwipeControl {
     constructor(element, amountOfItems) {
@@ -35,12 +33,12 @@ class SwipeControl {
         element.addEventListener('touchmove', (event) => this.move(event), { passive: false });
         element.addEventListener('touchend', (event) => this.end(event), { passive: false });
         element.addEventListener('transitionend', () => this.element.style.removeProperty('transition'));
-        //! this.observer();
     }
 
     //              Listener Events (TouchEvent)
     start(event) {
 
+        //      Testing for multitouch
         // let allTouches = event.targetTouches[1].clientX;
         // console.log(allTouches)
         // document.getElementsByTagName('p')[0].textContent = `Touches: ${allTouches}`;
@@ -146,20 +144,12 @@ class SwipeControl {
         this.currentItem -= 1;
     }
 
-    //!          Mutation Handling
-    // observer() {
-    //     let observer = new MutationObserver(debounce(() =>
-    //         this.handleChange(), 50));
-    //     observer.observe(this.element, { attributes: true });
-    //     console.log(this.element)
-    // }
-
     sync() {
         this.currentItem =
             parseInt(this.element.style.left.replace(/\D/g, '')) / 100;
     }
 
-    //*             [Development Purposes]
+    //*             Development Purposes
     console() {
         console.log(this.element);
         console.log('initialX: ' + this.initialX);
@@ -176,19 +166,15 @@ class SwipeControl {
 
 //?             Carousel
 //TODO      Base Functionality
-//*     - Finish touch controls
+//*     - Finish touch controls (more or less done)
 //*     - Start mouse dragging controls
 
 //TODO      Optional Settings
-//*     - Take in an object to enable/disable features
+//*     - Take in an object to enable/disable features (?)
 //*     - Allow for custom width/height (I might use SCSS for this)
 //*     - Create an optional 'auto-play' start/stop feature (timeIntervals)
 //*     - Create optional next/previous
-//*         - Optionally disable bubbles
-
-//TODO	    Issues
-//?     - Clicking bubble then swiping results in clicked bubble active indefinitely
-//?         - DOM shows the bubble span without the bubble-active class, not updating?
+//*         - Optionally disable bubbles when enabled
 class Carousel {
     constructor(index) {
         //  Carousel variables
@@ -266,7 +252,7 @@ class Carousel {
         this.activeBubble();
     }
 
-
+    //        Mutation Handling
     observer() {
         const carouselObserver = new MutationObserver(debounce(() => this.handleChange(), 50));
         carouselObserver.observe(this.inner, { attributes: true });
