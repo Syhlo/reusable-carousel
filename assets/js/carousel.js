@@ -35,6 +35,7 @@ class SwipeControl {
         element.addEventListener('touchmove', (event) => this.move(event), { passive: false });
         element.addEventListener('touchend', (event) => this.end(event), { passive: false });
         element.addEventListener('transitionend', () => this.element.style.removeProperty('transition'));
+        // this.observer();
     }
 
     //              Listener Events (TouchEvent)
@@ -92,7 +93,7 @@ class SwipeControl {
         this.touching = false;
 
         //  Display global variable information
-        // this.console();
+        this.console();
 
     }
 
@@ -145,6 +146,19 @@ class SwipeControl {
         this.currentItem -= 1;
     }
 
+    // !         Mutation Handling
+    // observer() {
+    //     let observer = new MutationObserver(debounce(() =>
+    //         this.handleChange(), 50));
+    //     observer.observe(this.element, { attributes: true });
+    //     console.log(this.element)
+    // }
+
+    // handleChange() {
+    //     this.currentItem =
+    //         parseInt(this.element.style.left.replace(/\D/g, '')) / 100;
+    // }
+
     //              Development Purposes
     console() {
         console.log(this.element);
@@ -164,7 +178,6 @@ class SwipeControl {
 //TODO      Base Functionality
 //*     - Finish touch controls
 //*     - Start mouse dragging controls
-//*     - MutationObserver to keep asset and SwipeControl items & active item in line
 
 //TODO      Optional Settings
 //*     - Take in an object to enable/disable features
@@ -172,6 +185,10 @@ class SwipeControl {
 //*     - Create an optional 'auto-play' start/stop feature (timeIntervals)
 //*     - Create optional next/previous
 //*         - Optionally disable bubbles
+
+//TODO	    Issues
+//?     - Clicking bubble then swiping results in clicked bubble active indefinitely
+//?         - DOM shows the bubble span without the bubble-active class, not updating?
 class Carousel {
     constructor(index) {
         //  Carousel variables
@@ -192,11 +209,10 @@ class Carousel {
         this.createCarousel();
     }
 
-    //  Create the bubbles on the carousel
     createBubbles() {
         if (this.imageAmount > 1) {
             for (let i = 0; i < this.imageAmount; i++) {
-                //  Create a wrapper span, bubble span, and append to image selector.
+                //  Create a wrapper, bubble, and append to selector
                 let bubble = document.createElement('span');
                 bubble.classList.add('bubble');
                 let wrapper = document.createElement('span');
@@ -209,7 +225,6 @@ class Carousel {
         }
     }
 
-    //  Attach listeners   
     attachListeners() {
         //  On bubble click switch to that image
         for (let i = 0; i < this.bubbles.length; i++) {
@@ -248,17 +263,17 @@ class Carousel {
     }
 
 
-    //              Mutation Handling
     observer() {
-        let observer = new MutationObserver(debounce(() => this.handleChange(), 50));
-        observer.observe(this.inner, { attributes: true });
+        const carouselObserver = new MutationObserver(debounce(() => this.handleChange(), 50));
+        carouselObserver.observe(this.inner, { attributes: true });
     }
 
     handleChange() {
-        this.currentItem = parseInt(this.inner.style.left.replace(/\D/g, '')) / 100;
+        this.currentItem =
+            parseInt(this.inner.style.left.replace(/\D/g, '')) / 100;
         this.activeBubble();
     }
 }
 
-let projectDisplay = new Carousel(0);
-let projectDisplay2 = new Carousel(1);
+new Carousel(0);
+new Carousel(1);
