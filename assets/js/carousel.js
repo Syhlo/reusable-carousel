@@ -11,8 +11,10 @@ function debounce(func, delay) {
 
 //?             SwipeControl
 //TODO      Base Functionality
-//*     - Fix multi-touch 'skipping' slides
-//*     - .throttle and .debounce when applicable
+//*     - Add .throttle and .debounce when applicable
+//*     - Prevent multitouch skipping items
+//*         - event.targetTouches[index].clientX = multitouch
+//*         - event.touches[index].clientX = single touch
 
 //TODO      Optional Settings
 //*     - Arrow Overlay: Create arrows that show when threshold was reached.
@@ -25,6 +27,7 @@ class SwipeControl {
         this.currentItem = 0;
         this.lastItem = -((amountOfItems - 1) * 100);
         this.touching = false;
+        this.multitouch = false;
         this.attachListeners(element);
     }
 
@@ -37,17 +40,10 @@ class SwipeControl {
 
     //              Listener Events (TouchEvent)
     start(event) {
-
-        //      Testing for multitouch
-        // let allTouches = event.targetTouches[1].clientX;
-        // console.log(allTouches)
-        // document.getElementsByTagName('p')[0].textContent = `Touches: ${allTouches}`;
-
         //  Disable default functionality, propagation, and disable new touches
         event.preventDefault();
         this.touching = true;
         event.stopImmediatePropagation();
-
         this.initialX = event.touches[0].clientX / 10;  //  Initial touch position
     }
 
@@ -55,8 +51,18 @@ class SwipeControl {
         event.preventDefault();
         const touch = event.touches[0].clientX / 10;  //    Current touch position
         const slideX = this.currentItem * 100;        //    Current slide
-        let moveX = (this.initialX - touch) / 5;    //    Move slide by value
-        let movable = moveX < 100;                  //    Movable threshold
+        let moveX = (this.initialX - touch) / 5;      //    Move slide by value
+        let movable = moveX < 10;                     //    Movable threshold
+
+        // Detect multitouch
+        try {
+            if (event.targetTouches[1].clientX > 0) {
+                this.multitouch = true;
+            }
+            document.querySelector('p').innerText = `${this.multitouch}`;
+        } catch {
+            document.querySelector('p').innerText = `${this.multitouch}`;
+        }
 
         //  First move: currentItem is falsy & moveX is positive & slide is still movable.
         if (!this.currentItem && moveX > 0 && movable) {
@@ -69,8 +75,8 @@ class SwipeControl {
                 this.element.style.left = -slideX - moveX + '%';
             }
             // Current item is last item and moveX is negative
-            else if (-(this.currentItem * 100) === this.lastItem && moveX < 0) {
-                this.element.style.left = -slideX - moveX + '%';
+            else if (-(this.currentItem * 100) === this.lastItem && moveX < 0 && movable) {
+                this.element.style.left = -slideX + moveX + '%';
             }
         }
     }
@@ -78,21 +84,27 @@ class SwipeControl {
     end(event) {
         event.preventDefault();
         this.difference = this.initialX - (event.changedTouches[0].clientX / 10);
-        //  Difference is positive
-        if (this.difference > 0) {
-            this.moveLeft();
+        if (this.multitouch) {
+            if (this.difference > 0 && event.targetTouches[0].clientX) {
+                this.moveLeft();
+            } else if (this.difference < 0 && event.targetTouches[0].clientX) {
+                this.moveRight();
+            }
         }
-        //  Difference is negative
-        else if (this.difference < 0) {
-            this.moveRight();
+        else if (this.touching) {
+            if (this.difference > 0) {
+                this.moveLeft();
+            } else if (this.difference < 0) {
+                this.moveRight();
+            }
         }
 
         //  Enable receiving new touches
         this.touching = false;
+        this.multitouch = false;
 
         //  Display global variable information
         this.console();
-
     }
 
     //             Controls
