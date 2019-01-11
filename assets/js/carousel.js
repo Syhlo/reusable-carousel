@@ -35,7 +35,7 @@ class SwipeControl {
         element.addEventListener('touchmove', (event) => this.move(event), { passive: false });
         element.addEventListener('touchend', (event) => this.end(event), { passive: false });
         element.addEventListener('transitionend', () => this.element.style.removeProperty('transition'));
-        // this.observer();
+        //! this.observer();
     }
 
     //              Listener Events (TouchEvent)
@@ -146,7 +146,7 @@ class SwipeControl {
         this.currentItem -= 1;
     }
 
-    // !         Mutation Handling
+    //!          Mutation Handling
     // observer() {
     //     let observer = new MutationObserver(debounce(() =>
     //         this.handleChange(), 50));
@@ -154,12 +154,12 @@ class SwipeControl {
     //     console.log(this.element)
     // }
 
-    // handleChange() {
-    //     this.currentItem =
-    //         parseInt(this.element.style.left.replace(/\D/g, '')) / 100;
-    // }
+    sync() {
+        this.currentItem =
+            parseInt(this.element.style.left.replace(/\D/g, '')) / 100;
+    }
 
-    //              Development Purposes
+    //*             [Development Purposes]
     console() {
         console.log(this.element);
         console.log('initialX: ' + this.initialX);
@@ -226,16 +226,19 @@ class Carousel {
     }
 
     attachListeners() {
+        //  Initiate touch controls
+        const swipe = new SwipeControl(this.inner, this.imageAmount);
+
         //  On bubble click switch to that image
         for (let i = 0; i < this.bubbles.length; i++) {
             this.bubbles[i].addEventListener("click", () => {
                 this.currentItem = i;
                 this.switchImage();
                 this.activeBubble();
+                swipe.sync();
             });
         }
-        //  Initiate touch controls
-        new SwipeControl(this.inner, this.imageAmount);
+
         this.observer();
     }
 
@@ -251,6 +254,7 @@ class Carousel {
                 bubble.children[0].classList.add("bubble-active");
             } else {
                 bubble.children[0].classList.remove("bubble-active");
+                bubble.children[0].classList.remove("bubble:hover");
             }
         });
     }

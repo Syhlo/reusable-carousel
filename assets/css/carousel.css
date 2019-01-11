@@ -41,7 +41,6 @@
 /* Selection */
 .bubble {
   display: inline-block;
-/*   margin: 2%; */
   height: 15px;
   width: 15px;
   background-color: rgba(210,210,210,0.5);
@@ -50,8 +49,11 @@
   cursor: pointer;
 }
 
-.bubble:hover {
-  background-color: rgba(255,255,255,0.75);
+/* Fixes sticky hover on mobile (Lv 4 Media Query) */
+@media (hover:hover) {
+    .bubble:hover {
+      background-color: rgba(255,255,255,0.75);
+    }
 }
 
 .bubble-active {
