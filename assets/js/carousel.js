@@ -26,13 +26,12 @@ class SwipeControl {
         this.difference;
         this.currentItem = 0;
         this.lastItem = -((amountOfItems - 1) * 100);
-        this.touching = false;
-        this.multitouch = false;
+        this.multitouch;
         this.attachListeners(element);
     }
 
     attachListeners(element) {
-        element.addEventListener('touchstart', (event) => { if (!this.touching) { this.start(event) } }, { passive: false });
+        element.addEventListener('touchstart', (event) => this.start(event), { passive: false });
         element.addEventListener('touchmove', (event) => this.move(event), { passive: false });
         element.addEventListener('touchend', (event) => this.end(event), { passive: false });
         element.addEventListener('transitionend', () => this.element.style.removeProperty('transition'));
@@ -42,7 +41,6 @@ class SwipeControl {
     start(event) {
         //  Disable default functionality, propagation, and disable new touches
         event.preventDefault();
-        this.touching = true;
         event.stopImmediatePropagation();
         this.initialX = event.touches[0].clientX / 10;  //  Initial touch position
     }
@@ -55,14 +53,8 @@ class SwipeControl {
         let movable = moveX < 10;                     //    Movable threshold
 
         // Detect multitouch
-        try {
-            if (event.targetTouches[1].clientX > 0) {
-                this.multitouch = true;
-            }
-            document.querySelector('p').innerText = `${this.multitouch}`;
-        } catch {
-            document.querySelector('p').innerText = `${this.multitouch}`;
-        }
+        this.multitouch = this.isMultitouch(event);
+        document.querySelector('p').innerText = `${this.multitouch}`;
 
         //  First move: currentItem is falsy & moveX is positive & slide is still movable.
         if (!this.currentItem && moveX > 0 && movable) {
@@ -84,24 +76,12 @@ class SwipeControl {
     end(event) {
         event.preventDefault();
         this.difference = this.initialX - (event.changedTouches[0].clientX / 10);
-        if (this.multitouch) {
-            if (this.difference > 0 && event.targetTouches[0].clientX) {
-                this.moveLeft();
-            } else if (this.difference < 0 && event.targetTouches[0].clientX) {
-                this.moveRight();
-            }
-        }
-        else if (this.touching) {
-            if (this.difference > 0) {
-                this.moveLeft();
-            } else if (this.difference < 0) {
-                this.moveRight();
-            }
-        }
 
-        //  Enable receiving new touches
-        this.touching = false;
-        this.multitouch = false;
+        if (this.difference > 0) {
+            this.moveLeft();
+        } else if (this.difference < 0) {
+            this.moveRight();
+        }
 
         //  Display global variable information
         this.console();
@@ -154,6 +134,14 @@ class SwipeControl {
         this.element.style.transition = 'left 0.3s'
         this.element.style.left = -(this.currentItem * 100) + 100 + '%';
         this.currentItem -= 1;
+    }
+
+    isMultitouch(event) {
+        try {
+            return typeof event.targetTouches[1].clientX === 'number'
+        } catch {
+            return false
+        }
     }
 
     sync() {
