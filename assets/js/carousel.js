@@ -1,7 +1,6 @@
 //?             SwipeControl
 //TODO      Base Functionality
-//*     - Handle Next/Previous properly
-//*         - Transition
+//*     - Only allow one point of contact with surface
 //*     - Look into .throttle and .debounce
 //*     - MutationObserver to keep asset and SwipeControl items in line
 
@@ -31,8 +30,7 @@ class SwipeControl {
     //              Listener Events (TouchEvent)
     start(event) {
         if (!this.touching) {
-            //  Initial touch position
-            this.initialX = event.touches[0].clientX / 10;
+            this.initialX = event.touches[0].clientX / 10;  //  Initial touch position
 
             //  Disable default functionality, propagation, and disable new touches
             event.preventDefault();
@@ -43,10 +41,10 @@ class SwipeControl {
 
     move(event) {
         event.preventDefault();
-        const touch = event.touches[0].clientX / 2;   //    Current touch position
+        const touch = event.touches[0].clientX / 10;  //    Current touch position
         const slideX = this.currentItem * 100;        //    Current slide
-        let moveX = this.initialX - touch / 5;        //    Move slide by value
-        let movable = moveX < 100;
+        let moveX = (this.initialX - touch) / 5;    //    Move slide by value
+        let movable = moveX < 100;                  //    Movable threshold
 
         //  First move: currentItem is falsy & moveX is positive & slide is still movable.
         if (!this.currentItem && moveX > 0 && movable) {
@@ -87,7 +85,7 @@ class SwipeControl {
 
     //             Controls
     moveLeft() {
-        const threshold = 100 / 6;
+        const threshold = 100 / 8;
         //  Difference is more than threshold, current item isn't last item
         if (this.difference > threshold && -(this.currentItem * 100) !== this.lastItem) {
             this.next();
@@ -100,7 +98,7 @@ class SwipeControl {
     }
 
     moveRight() {
-        const threshold = -(100 / 6);
+        const threshold = -(100 / 8);
         //  Threshold is greater than difference, currentItem is not the first
         if (threshold > this.difference && this.currentItem !== 0) {
             this.prev();
@@ -132,10 +130,6 @@ class SwipeControl {
         this.element.style.transition = 'left 0.3s'
         this.element.style.left = -(this.currentItem * 100) + 100 + '%';
         this.currentItem -= 1;
-    }
-
-    transition() {
-
     }
 
     //              Development Purposes
@@ -244,7 +238,6 @@ class Carousel {
     }
 
 }
-
 
 let projectDisplay = new Carousel(0);
 let projectDisplay2 = new Carousel(1);
