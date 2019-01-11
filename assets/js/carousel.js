@@ -1,3 +1,14 @@
+//*     Helper Functions
+function debounce(func, delay) {
+    let inDebounce
+    return function () {
+        const context = this
+        const args = arguments
+        clearTimeout(inDebounce)
+        inDebounce = setTimeout(() => func.apply(context, args), delay)
+    }
+}
+
 //?             SwipeControl
 //TODO      Base Functionality
 //*     - Only allow one point of contact with surface
@@ -8,7 +19,6 @@
 //*     - Arrow Overlay: Create arrows that show when threshold was reached.
 //*         - Potentially disable the slide being moved
 //?  Goal: make SwipeControl reusable for similar assets
-
 class SwipeControl {
     constructor(element, amountOfItems) {
         this.element = element;
@@ -21,22 +31,25 @@ class SwipeControl {
     }
 
     attachListeners(element) {
-        element.addEventListener('touchstart', (event) => this.start(event), { passive: false });
+        element.addEventListener('touchstart', (event) => { if (!this.touching) { this.start(event) } }, { passive: false });
         element.addEventListener('touchmove', (event) => this.move(event), { passive: false });
         element.addEventListener('touchend', (event) => this.end(event), { passive: false });
-        element.addEventListener('transitionend', () => this.element.style.transition = 'none');
+        element.addEventListener('transitionend', () => this.element.style.removeProperty('transition'));
     }
 
     //              Listener Events (TouchEvent)
     start(event) {
-        if (!this.touching) {
-            this.initialX = event.touches[0].clientX / 10;  //  Initial touch position
 
-            //  Disable default functionality, propagation, and disable new touches
-            event.preventDefault();
-            this.touching = true;
-            event.stopImmediatePropagation();
-        }
+        // let allTouches = event.targetTouches[1].clientX;
+        // console.log(allTouches)
+        // document.getElementsByTagName('p')[0].textContent = `Touches: ${allTouches}`;
+
+        //  Disable default functionality, propagation, and disable new touches
+        event.preventDefault();
+        this.touching = true;
+        event.stopImmediatePropagation();
+
+        this.initialX = event.touches[0].clientX / 10;  //  Initial touch position
     }
 
     move(event) {
@@ -79,13 +92,13 @@ class SwipeControl {
         this.touching = false;
 
         //  Display global variable information
-        this.console();
+        // this.console();
 
     }
 
     //             Controls
     moveLeft() {
-        const threshold = 100 / 8;
+        const threshold = 100 / 9;
         //  Difference is more than threshold, current item isn't last item
         if (this.difference > threshold && -(this.currentItem * 100) !== this.lastItem) {
             this.next();
@@ -98,7 +111,7 @@ class SwipeControl {
     }
 
     moveRight() {
-        const threshold = -(100 / 8);
+        const threshold = -(100 / 9);
         //  Threshold is greater than difference, currentItem is not the first
         if (threshold > this.difference && this.currentItem !== 0) {
             this.prev();
@@ -134,15 +147,13 @@ class SwipeControl {
 
     //              Development Purposes
     console() {
-        console.log(' ');
-        console.log('-------------------');
         console.log(this.element);
         console.log('initialX: ' + this.initialX);
         console.log('difference: ' + this.difference);
         console.log('current: ' + this.currentItem);
         console.log('lastItem: ' + this.lastItem);
         console.log('left: ' + this.element.style.left);
-        console.log('-------------------');
+        console.log(' ');
 
     }
 
@@ -161,7 +172,6 @@ class SwipeControl {
 //*     - Create an optional 'auto-play' start/stop feature (timeIntervals)
 //*     - Create optional next/previous
 //*         - Optionally disable bubbles
-
 class Carousel {
     constructor(index) {
         //  Carousel variables
@@ -171,13 +181,12 @@ class Carousel {
             this.carousel.getElementsByClassName('inner')[0];
         this.imageAmount =
             this.inner.getElementsByTagName('img').length;
-        this.currentItemImage = 0;
+        this.currentItem = 0;
 
         //  Selection variables
         this.imageSelector =
             this.carousel.getElementsByClassName('image-selector')[0];
         this.bubbles = [];
-        this.width = 100;
 
         //  Init
         this.createCarousel();
@@ -205,24 +214,25 @@ class Carousel {
         //  On bubble click switch to that image
         for (let i = 0; i < this.bubbles.length; i++) {
             this.bubbles[i].addEventListener("click", () => {
-                this.currentItemImage = i;
+                this.currentItem = i;
                 this.switchImage();
                 this.activeBubble();
             });
         }
         //  Initiate touch controls
         new SwipeControl(this.inner, this.imageAmount);
+        this.observer();
     }
 
     //  Switch to desired image  
     switchImage() {
-        this.inner.style.left = -this.width * this.currentItemImage + "%";
+        this.inner.style.left = -100 * this.currentItem + "%";
     }
 
     //  Which bubble is active?  
     activeBubble() {
         this.bubbles.forEach((bubble, index) => {
-            if (index === this.currentItemImage) {
+            if (index === this.currentItem) {
                 bubble.children[0].classList.add("bubble-active");
             } else {
                 bubble.children[0].classList.remove("bubble-active");
@@ -237,6 +247,22 @@ class Carousel {
         this.activeBubble();
     }
 
+
+    //              Mutation Handling
+    observer() {
+        let observer = new MutationObserver(debounce(() => this.handleChange(), 50));
+        observer.observe(this.inner, { attributes: true });
+    }
+
+    handleChange() {
+        let newSlide = this.inner.style.left
+        if (parseInt(newSlide.charAt(0)) === 0) {
+            this.currentItem = 0;
+        } else {
+            this.currentItem = parseInt(newSlide.charAt(1));
+        }
+        this.activeBubble();
+    }
 }
 
 let projectDisplay = new Carousel(0);
