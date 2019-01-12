@@ -1,4 +1,3 @@
-//*     Helper Functions
 function debounce(func, wait, immediate) {
     var timeout;
 
@@ -24,22 +23,19 @@ function debounce(func, wait, immediate) {
 //?             SwipeControl
 //TODO      Base Functionality
 //*     - Add .throttle and .debounce when applicable
-//*     - Prevent multitouch skipping items
-//?         Created way to detect multitouch (this.isMultitouch(event))
-
+//*         - throttle the movement
 //TODO      Optional Settings
 //*     - Arrow Overlay: Create arrows that show when threshold was reached.
 //?  Goal: make SwipeControl reusable for similar assets
 class SwipeControl {
     constructor(element, amountOfItems) {
-        this.element = element;                                 //  Affected Element
-        this.initial;                                           //  Initial touch position
-        this.difference;                                        //  Difference between initial and new position
-        this.threshold = 10;                                    //  If difference is above 10% then move the slide 
-        this.currentItem = 0;                                   //  Current item the slide is on
-        this.lastItem = -((amountOfItems - 1) * 100);           //  Last item of the slides
-        this.multitouch;                                        //  Determine multitouch
-        this.attachListeners(element);                          //  Initiates controls
+        this.element = element;                                 //  obj: Affected Element
+        this.initial;                                           //  int: Initial touch position
+        this.difference;                                        //  int: Difference between initial and new position
+        this.threshold = 3;                                     //  int: % of item before triggering next slide
+        this.currentItem = 0;                                   //  int: Current item
+        this.lastItem = -((amountOfItems - 1) * 100);           //  int: Last item                                     //  bool: Determine multitouch
+        this.attachListeners(element);
     }
 
     attachListeners(element) {
@@ -51,18 +47,45 @@ class SwipeControl {
 
     //*                                  Event Handlers
     start(event) {
-        event.preventDefault();                                 //  Disable default functionality
-        event.stopImmediatePropagation();                       //  Disable propagation
-        this.initial = event.touches[0].clientX / 10;           //  Initial touch position
-        this.multitouch = this.isMultitouch(event)              //  Determine if multitouch or not
+        event.preventDefault();
+        if (event.changedTouches[0].identifier === 0) {             //  Do not handle any more than the first touch
+            this.initial = event.touches[0].clientX / 10;           //  int: Initial touch position
+            this.multitouch = event.touches.length > 1;             //  bool: Determine if multitouch or not
+            // this.debug(event);
+        }
     }
 
     move(event) {
         event.preventDefault();
-        const touch = event.touches[0].clientX / 10;            //  Current touch position
-        const item = this.currentItem * 100;                    //  Current item in percentage
-        let moveX = (this.initial - touch) / 5;                 //  Speed of slide movement
-        let movable = moveX < 10;                               //  Movable threshold
+        if (event.changedTouches[0].identifier === 0) {             //  Do not handle any more than the first touch
+            this.handleMovement(event)
+        }
+    }
+
+    end(event) {
+        event.preventDefault();
+        if (event.changedTouches[0].identifier === 0) {             //  Do not handle any more than the first touch
+            let newPos = (event.changedTouches[0].clientX / 10)     //  int: New touch position
+            this.difference = this.initial - newPos;                //  int: Difference between initial and new position
+            this.element.style.transition = 'left 0.1s'             //  str: Transition effect for movement
+
+            if (this.difference > 0) {
+                this.slideRight();
+            } else if (this.difference < 0) {
+                this.slideLeft();
+            }
+
+            // this.debug(event);
+        }
+    }
+
+    //*                                  Controls
+
+    handleMovement(event) {
+        const touch = event.touches[0].clientX / 10;            //  int: Current touch position
+        const item = this.currentItem * 100;                    //  int: Current item in percentage
+        let moveX = (this.initial - touch) / 5;                 //  int: Speed of slide movement
+        let movable = moveX < 10;                               //  int: Movable threshold
 
 
         //  First item:
@@ -82,23 +105,7 @@ class SwipeControl {
         }
     }
 
-    end(event) {
-        event.preventDefault();
-        let newPos = (event.changedTouches[0].clientX / 10)     //  New touch position
-        this.difference = this.initial - newPos;                //  Difference between initial and new position
-        this.element.style.transition = 'left 0.25s'            //  Transition effect for movement
-        if (this.difference > 0) {
-            this.moveRight();
-        } else if (this.difference < 0) {
-            this.moveLeft();
-        }
-
-        this.debug(newPos);                                     //  Debugging information
-    }
-
-    //*                                  Controls
-
-    moveRight() {
+    slideRight() {
         // First item:
         if (this.difference > this.threshold && -(this.currentItem * 100) !== this.lastItem) {
             this.next();
@@ -107,7 +114,7 @@ class SwipeControl {
         }
     }
 
-    moveLeft() {
+    slideLeft() {
         // Not first item:
         if (-this.threshold > this.difference && this.currentItem !== 0) {
             this.previous();
@@ -133,29 +140,24 @@ class SwipeControl {
     }
 
     //*                                  Helpers
-    isMultitouch(event) {
-        try {
-            return typeof event.touches[1].clientX === 'number' || false
-        } catch (error) {
-            return false
-        }
-    }
-
     sync() {
         this.currentItem =
             parseInt(this.element.style.left.replace(/\D/g, '')) / 100;
     }
 
-    debug(extra = 'undefined') {
-        document.querySelector('p').innerHTML = `
-        <strong>Debugging Variables</strong> <br>
-        initial: ${this.initial} <br>
-        newPos: ${extra} <br>
-        difference: ${this.difference} <br>
-        current: ${this.currentItem} <br>
-        lastItem: ${this.lastItem} <br>
-        left: ${this.element.style.left} <br> 
-        multitouch: ${this.multitouch}`;
+    debug(event) {
+        var now = new Date()
+        console.log('%cDebugging Variables', 'font-weight: bold')
+        console.log(
+            'initial: ' + this.initial + '\n' +
+            'difference: ' + this.difference + '\n' +
+            'newPos: ' + (event.changedTouches[0].clientX / 10) + '\n' +
+            'currentItem: ' + this.currentItem + '\n' +
+            'lastItem: ' + this.lastItem + '\n' +
+            'left: ' + this.element.style.left + '\n' +
+            'multitouch: ' + this.multitouch + '\n' +
+            'firstTouch: ' + (event.changedTouches[0].identifier === 0))
+        console.log(' ')
     }
 
 }
