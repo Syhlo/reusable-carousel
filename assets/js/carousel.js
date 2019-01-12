@@ -217,6 +217,7 @@ class Carousel {
         //  Initiate touch controls
         if (this.imageAmount > 1) {
             const swipe = new SwipeControl(this.inner, this.imageAmount);
+            this.inner.addEventListener('transitionend', () => this.inner.style.removeProperty('transition'));
 
 
             //  Handle bubble click functionality
@@ -236,6 +237,7 @@ class Carousel {
 
     //*                                  Controls
     switchImage() {
+        this.inner.style.transition = 'left 0.1s';
         this.inner.style.left = -100 * this.currentItem + "%";
     }
 
