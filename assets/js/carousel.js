@@ -29,12 +29,12 @@ function debounce(func, wait, immediate) {
 //?  Goal: make SwipeControl reusable for similar assets
 class SwipeControl {
     constructor(element, amountOfItems) {
-        this.element = element;                                 //  obj: Affected Element
+        this.element = element;                                 //  obj: Element to manipulate
         this.initial;                                           //  int: Initial touch position
         this.difference;                                        //  int: Difference between initial and new position
-        this.threshold = 3;                                     //  int: % of item before triggering next slide
+        this.threshold = 5;                                     //  int: % of item before triggering next slide
         this.currentItem = 0;                                   //  int: Current item
-        this.lastItem = -((amountOfItems - 1) * 100);           //  int: Last item                                     //  bool: Determine multitouch
+        this.lastItem = -((amountOfItems - 1) * 100);           //  int: Last item
         this.attachListeners(element);
     }
 
@@ -50,14 +50,13 @@ class SwipeControl {
         event.preventDefault();
         if (event.changedTouches[0].identifier === 0) {             //  Do not handle any more than the first touch
             this.initial = event.touches[0].clientX / 10;           //  int: Initial touch position
-            // this.debug(event);
         }
     }
 
     move(event) {
         event.preventDefault();
         if (event.changedTouches[0].identifier === 0) {             //  Do not handle any more than the first touch
-            this.handleMovement(event)
+            this.handleMovement(event);
         }
     }
 
@@ -147,6 +146,7 @@ class SwipeControl {
     debug(event) {
         var now = new Date()
         console.log('%cDebugging Variables', 'font-weight: bold')
+        console.log(event)
         console.log(
             'initial: ' + this.initial + '\n' +
             'difference: ' + this.difference + '\n' +
@@ -215,20 +215,23 @@ class Carousel {
 
     attachListeners() {
         //  Initiate touch controls
-        const swipe = new SwipeControl(this.inner, this.imageAmount);
+        if (this.imageAmount > 1) {
+            const swipe = new SwipeControl(this.inner, this.imageAmount);
 
-        //  Handle bubble click functionality
-        for (let i = 0; i < this.bubbles.length; i++) {
-            this.bubbles[i].addEventListener("click", () => {
-                this.currentItem = i;
-                this.switchImage();
-                this.activeBubble();
-                swipe.sync();
-            });
+
+            //  Handle bubble click functionality
+            for (let i = 0; i < this.bubbles.length; i++) {
+                this.bubbles[i].addEventListener("click", () => {
+                    this.currentItem = i;
+                    this.switchImage();
+                    this.activeBubble();
+                    swipe.sync();
+                });
+            }
+
+            // Observe for style mutations
+            this.observer();
         }
-
-        // Observe for style mutations
-        this.observer();
     }
 
     //*                                  Controls
@@ -258,6 +261,14 @@ class Carousel {
             parseInt(this.inner.style.left.replace(/\D/g, '')) / 100;
         this.activeBubble();
     }
+}
+
+let carouselOptions = {
+    autoplay: false,
+    arrowButtons: false,
+    bubbles: false,
+    swipeControls: false,
+    dragControls: false
 }
 
 new Carousel(0);
