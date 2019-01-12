@@ -1,20 +1,31 @@
 //*     Helper Functions
-function debounce(func, delay) {
-    let inDebounce
-    return function () {
-        const context = this
-        const args = arguments
-        clearTimeout(inDebounce)
-        inDebounce = setTimeout(() => func.apply(context, args), delay)
-    }
-}
+function debounce(func, wait, immediate) {
+    var timeout;
+
+    return function executedFunction() {
+        var context = this;
+        var args = arguments;
+
+        var later = function () {
+            timeout = null;
+            if (!immediate) func.apply(context, args);
+        };
+
+        var callNow = immediate && !timeout;
+
+        clearTimeout(timeout);
+
+        timeout = setTimeout(later, wait);
+
+        if (callNow) func.apply(context, args);
+    };
+};
 
 //?             SwipeControl
 //TODO      Base Functionality
 //*     - Add .throttle and .debounce when applicable
 //*     - Prevent multitouch skipping items
-//*         - event.targetTouches[index].clientX = multitouch
-//*         - event.touches[index].clientX = single touch
+//?         Created way to detect multitouch (this.isMultitouch(event))
 
 //TODO      Optional Settings
 //*     - Arrow Overlay: Create arrows that show when threshold was reached.
@@ -52,9 +63,7 @@ class SwipeControl {
         let moveX = (this.initialX - touch) / 5;      //    Move slide by value
         let movable = moveX < 10;                     //    Movable threshold
 
-        // Detect multitouch
-        this.multitouch = this.isMultitouch(event);
-        document.querySelector('p').innerText = `${this.multitouch}`;
+        this.multitouch = this.isMultitouch(event)
 
         //  First move: currentItem is falsy & moveX is positive & slide is still movable.
         if (!this.currentItem && moveX > 0 && movable) {
@@ -68,7 +77,7 @@ class SwipeControl {
             }
             // Current item is last item and moveX is negative
             else if (-(this.currentItem * 100) === this.lastItem && moveX < 0 && movable) {
-                this.element.style.left = -slideX + moveX + '%';
+                this.element.style.left = -slideX - moveX + '%';
             }
         }
     }
@@ -76,11 +85,10 @@ class SwipeControl {
     end(event) {
         event.preventDefault();
         this.difference = this.initialX - (event.changedTouches[0].clientX / 10);
-
         if (this.difference > 0) {
-            this.moveLeft();
+            debounce(this.moveLeft(), 100, true);
         } else if (this.difference < 0) {
-            this.moveRight();
+            debounce(this.moveRight(), 100, true);
         }
 
         //  Display global variable information
@@ -138,8 +146,8 @@ class SwipeControl {
 
     isMultitouch(event) {
         try {
-            return typeof event.targetTouches[1].clientX === 'number'
-        } catch {
+            return typeof event.touches[1].clientX === 'number' || false
+        } catch (error) {
             return false
         }
     }
@@ -157,8 +165,16 @@ class SwipeControl {
         console.log('current: ' + this.currentItem);
         console.log('lastItem: ' + this.lastItem);
         console.log('left: ' + this.element.style.left);
+        console.log('multitouch: ' + this.multitouch)
         console.log(' ');
-
+        document.querySelector('p').innerHTML = `
+        <strong>Debugging Variables</strong> <br>
+        initialX: ${this.initialX} <br>
+        difference: ${this.difference} <br>
+        current: ${this.current} <br>
+        lastItem: ${this.lastItem} <br>
+        left: ${this.element.style.left} <br> 
+        multitouch: ${this.multitouch}`;
     }
 
 }
@@ -254,11 +270,12 @@ class Carousel {
 
     //        Mutation Handling
     observer() {
-        const carouselObserver = new MutationObserver(debounce(() => this.handleChange(), 50));
+        const carouselObserver = new MutationObserver(debounce(() => this.handleChange(), 100));
         carouselObserver.observe(this.inner, { attributes: true });
     }
 
     handleChange() {
+        console.log('trigger')
         this.currentItem =
             parseInt(this.inner.style.left.replace(/\D/g, '')) / 100;
         this.activeBubble();
