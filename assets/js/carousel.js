@@ -32,13 +32,14 @@ function debounce(func, wait, immediate) {
 //?  Goal: make SwipeControl reusable for similar assets
 class SwipeControl {
     constructor(element, amountOfItems) {
-        this.element = element;
-        this.initialX;
-        this.difference;
-        this.currentItem = 0;
-        this.lastItem = -((amountOfItems - 1) * 100);
-        this.multitouch;
-        this.attachListeners(element);
+        this.element = element;                                 //  Affected Element
+        this.initial;                                           //  Initial touch position
+        this.difference;                                        //  Difference between initial and new position
+        this.threshold = 10;                                    //  If difference is above 10% then move the slide 
+        this.currentItem = 0;                                   //  Current item the slide is on
+        this.lastItem = -((amountOfItems - 1) * 100);           //  Last item of the slides
+        this.multitouch;                                        //  Determine multitouch
+        this.attachListeners(element);                          //  Initiates controls
     }
 
     attachListeners(element) {
@@ -48,102 +49,90 @@ class SwipeControl {
         element.addEventListener('transitionend', () => this.element.style.removeProperty('transition'));
     }
 
-    //              Listener Events (TouchEvent)
+    //*                                  Event Handlers
     start(event) {
-        //  Disable default functionality, propagation, and disable new touches
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        this.initialX = event.touches[0].clientX / 10;  //  Initial touch position
+        event.preventDefault();                                 //  Disable default functionality
+        event.stopImmediatePropagation();                       //  Disable propagation
+        this.initial = event.touches[0].clientX / 10;           //  Initial touch position
+        this.multitouch = this.isMultitouch(event)              //  Determine if multitouch or not
     }
 
     move(event) {
         event.preventDefault();
-        const touch = event.touches[0].clientX / 10;  //    Current touch position
-        const slideX = this.currentItem * 100;        //    Current slide
-        let moveX = (this.initialX - touch) / 5;      //    Move slide by value
-        let movable = moveX < 10;                     //    Movable threshold
+        const touch = event.touches[0].clientX / 10;            //  Current touch position
+        const item = this.currentItem * 100;                    //  Current item in percentage
+        let moveX = (this.initial - touch) / 5;                 //  Speed of slide movement
+        let movable = moveX < 10;                               //  Movable threshold
 
-        this.multitouch = this.isMultitouch(event)
 
-        //  First move: currentItem is falsy & moveX is positive & slide is still movable.
+        //  First item:
         if (!this.currentItem && moveX > 0 && movable) {
             this.element.style.left = -moveX + '%';
         }
-        //  Subsequent moves: Current exists
-        else if (this.currentItem) {
-            //  Current item isn't the last item
-            if (-(this.currentItem * 100) !== this.lastItem && movable) {
-                this.element.style.left = -slideX - moveX + '%';
+        //  Subsequent item(s):
+        else if (this.currentItem && movable) {
+            //  Not on last item
+            if (-(this.currentItem * 100) !== this.lastItem) {
+                this.element.style.left = -item - moveX + '%';
             }
-            // Current item is last item and moveX is negative
-            else if (-(this.currentItem * 100) === this.lastItem && moveX < 0 && movable) {
-                this.element.style.left = -slideX - moveX + '%';
+            // On last item
+            else if (-(this.currentItem * 100) === this.lastItem && moveX < 0) {
+                this.element.style.left = -item - moveX + '%';
             }
         }
     }
 
     end(event) {
         event.preventDefault();
-        this.difference = this.initialX - (event.changedTouches[0].clientX / 10);
+        let newPos = (event.changedTouches[0].clientX / 10)     //  New touch position
+        this.difference = this.initial - newPos;                //  Difference between initial and new position
+        this.element.style.transition = 'left 0.25s'            //  Transition effect for movement
         if (this.difference > 0) {
-            debounce(this.moveLeft(), 100, true);
+            this.moveRight();
         } else if (this.difference < 0) {
-            debounce(this.moveRight(), 100, true);
+            this.moveLeft();
         }
 
-        //  Display global variable information
-        this.console();
+        this.debug(newPos);                                     //  Debugging information
     }
 
-    //             Controls
-    moveLeft() {
-        const threshold = 100 / 9;
-        //  Difference is more than threshold, current item isn't last item
-        if (this.difference > threshold && -(this.currentItem * 100) !== this.lastItem) {
+    //*                                  Controls
+
+    moveRight() {
+        // First item:
+        if (this.difference > this.threshold && -(this.currentItem * 100) !== this.lastItem) {
             this.next();
-        }
-        //  Threshold is greater than difference in X, currentItem doesn't exist
-        else if (threshold > this.difference) {
-            this.element.style.transition = 'left 0.3s'
+        } else if (this.threshold > this.difference) {
             this.element.style.left = -(this.currentItem * 100) + '%';
         }
     }
 
-    moveRight() {
-        const threshold = -(100 / 9);
-        //  Threshold is greater than difference, currentItem is not the first
-        if (threshold > this.difference && this.currentItem !== 0) {
-            this.prev();
-        }
-        //  Difference is greater than threshold
-        else if (threshold < this.difference) {
-            this.element.style.transition = 'left 0.3s'
+    moveLeft() {
+        // Not first item:
+        if (-this.threshold > this.difference && this.currentItem !== 0) {
+            this.previous();
+        } else if (-this.threshold < this.difference) {
             this.element.style.left = -(this.currentItem * 100) + '%';
         }
     }
 
     next() {
-        // First move: currentItem does not exist
+        // First item:
         if (!this.currentItem) {
-            this.element.style.transition = 'left 0.3s'
             this.element.style.left = -100 + '%';
             this.currentItem += 1;
-        }
-        // Subsequent moves: currentItem exists
-        else if (this.currentItem) {
-            this.element.style.transition = 'left 0.3s'
+        } else if (this.currentItem) {
             this.element.style.left = -(this.currentItem * 100) - 100 + '%';
             this.currentItem += 1;
         }
     }
 
-    prev() {
-        //  Previous slide
-        this.element.style.transition = 'left 0.3s'
+    previous() {
         this.element.style.left = -(this.currentItem * 100) + 100 + '%';
         this.currentItem -= 1;
     }
 
+    //*                                  Helpers
     isMultitouch(event) {
         try {
             return typeof event.touches[1].clientX === 'number' || false
@@ -157,21 +146,13 @@ class SwipeControl {
             parseInt(this.element.style.left.replace(/\D/g, '')) / 100;
     }
 
-    //*             Development Purposes
-    console() {
-        console.log(this.element);
-        console.log('initialX: ' + this.initialX);
-        console.log('difference: ' + this.difference);
-        console.log('current: ' + this.currentItem);
-        console.log('lastItem: ' + this.lastItem);
-        console.log('left: ' + this.element.style.left);
-        console.log('multitouch: ' + this.multitouch)
-        console.log(' ');
+    debug(extra = 'undefined') {
         document.querySelector('p').innerHTML = `
         <strong>Debugging Variables</strong> <br>
-        initialX: ${this.initialX} <br>
+        initial: ${this.initial} <br>
+        newPos: ${extra} <br>
         difference: ${this.difference} <br>
-        current: ${this.current} <br>
+        current: ${this.currentItem} <br>
         lastItem: ${this.lastItem} <br>
         left: ${this.element.style.left} <br> 
         multitouch: ${this.multitouch}`;
@@ -211,18 +192,23 @@ class Carousel {
         this.createCarousel();
     }
 
+    //*                                  Creation
+    createCarousel() {
+        this.createBubbles();
+        this.attachListeners();
+        this.activeBubble();
+    }
+
     createBubbles() {
         if (this.imageAmount > 1) {
             for (let i = 0; i < this.imageAmount; i++) {
-                //  Create a wrapper, bubble, and append to selector
-                let bubble = document.createElement('span');
-                bubble.classList.add('bubble');
-                let wrapper = document.createElement('span');
-                wrapper.classList.add('bubble-wrapper');
-                wrapper.appendChild(bubble);
-
-                this.imageSelector.appendChild(wrapper);
-                this.bubbles.push(wrapper);
+                let wrapper = document.createElement('span');   //
+                wrapper.classList.add('bubble-wrapper');        //
+                let bubble = document.createElement('span');    //
+                bubble.classList.add('bubble');                 //
+                wrapper.appendChild(bubble);                    //  Put the bubble in a wrapper
+                this.imageSelector.appendChild(wrapper);        //  Add bubble to image selector
+                this.bubbles.push(wrapper);                     //  Add bubble to bubbles array for listeners
             }
         }
     }
@@ -231,7 +217,7 @@ class Carousel {
         //  Initiate touch controls
         const swipe = new SwipeControl(this.inner, this.imageAmount);
 
-        //  On bubble click switch to that image
+        //  Handle bubble click functionality
         for (let i = 0; i < this.bubbles.length; i++) {
             this.bubbles[i].addEventListener("click", () => {
                 this.currentItem = i;
@@ -241,15 +227,15 @@ class Carousel {
             });
         }
 
+        // Observe for style mutations
         this.observer();
     }
 
-    //  Switch to desired image  
+    //*                                  Controls
     switchImage() {
         this.inner.style.left = -100 * this.currentItem + "%";
     }
 
-    //  Which bubble is active?  
     activeBubble() {
         this.bubbles.forEach((bubble, index) => {
             if (index === this.currentItem) {
@@ -261,21 +247,13 @@ class Carousel {
         });
     }
 
-    //  Create the carousel  
-    createCarousel() {
-        this.createBubbles();
-        this.attachListeners();
-        this.activeBubble();
-    }
-
-    //        Mutation Handling
+    //*                                  Helpers
     observer() {
-        const carouselObserver = new MutationObserver(debounce(() => this.handleChange(), 100));
+        const carouselObserver = new MutationObserver(debounce(() => this.handleChange(), 50));
         carouselObserver.observe(this.inner, { attributes: true });
     }
 
     handleChange() {
-        console.log('trigger')
         this.currentItem =
             parseInt(this.inner.style.left.replace(/\D/g, '')) / 100;
         this.activeBubble();
