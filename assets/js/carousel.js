@@ -50,7 +50,6 @@ class SwipeControl {
         event.preventDefault();
         if (event.changedTouches[0].identifier === 0) {             //  Do not handle any more than the first touch
             this.initial = event.touches[0].clientX / 10;           //  int: Initial touch position
-            this.multitouch = event.touches.length > 1;             //  bool: Determine if multitouch or not
             // this.debug(event);
         }
     }
@@ -155,7 +154,6 @@ class SwipeControl {
             'currentItem: ' + this.currentItem + '\n' +
             'lastItem: ' + this.lastItem + '\n' +
             'left: ' + this.element.style.left + '\n' +
-            'multitouch: ' + this.multitouch + '\n' +
             'firstTouch: ' + (event.changedTouches[0].identifier === 0))
         console.log(' ')
     }
