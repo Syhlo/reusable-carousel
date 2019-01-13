@@ -1,48 +1,30 @@
-function debounce(func, wait, immediate) {
-    var timeout;
-    return function executedFunction() {
-        var context = this;
-        var args = arguments;
-        var later = function () {
-            timeout = null;
-            if (!immediate) func.apply(context, args);
-        };
-        var callNow = immediate && !timeout;
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-        if (callNow) func.apply(context, args);
-    };
-};
-
 //?             SwipeControl
 //TODO      Base Functionality
 //*     - Add .throttle and .debounce when applicable
 //*         - throttle the movement
-//TODO      Optional Settings
-//*     - Arrow Overlay: Create arrows that show when threshold was reached.
 //?  Goal: make SwipeControl reusable for similar assets
 class SwipeControl {
-    constructor(element, amountOfItems) {
-        this.element = element;                                 //  obj: Element to manipulate
-        this.initial;                                           //  int: Initial touch position
-        this.difference;                                        //  int: Difference between initial and new position
-        this.threshold = 5;                                     //  int: % of item before triggering next slide
-        this.currentItem = 0;                                   //  int: Current item
-        this.lastItem = -((amountOfItems - 1) * 100);           //  int: Last item
+    constructor() {
+        this.element;                                           //  Element to listen on
+        this.initial;                                           //  Initial touch position
+        this.difference;                                        //  Difference between initial and new position
+        this.threshold = 5;                                     //  % of item before triggering next slide
+        this.currentItem;                                       //  Current item
+        this.lastItem;                                          //  Last item
     }
 
-    swipeListeners(element) {
-        element.addEventListener('touchstart', (event) => this.start(event), { passive: false });
-        element.addEventListener('touchmove', (event) => this.move(event), { passive: false });
-        element.addEventListener('touchend', (event) => this.end(event), { passive: false });
-        element.addEventListener('transitionend', () => this.element.style.removeProperty('transition'));
+    swipeEvents() {
+        this.element.addEventListener('touchstart', (event) => this.start(event), { passive: false });
+        this.element.addEventListener('touchmove', (event) => this.move(event), { passive: false });
+        this.element.addEventListener('touchend', (event) => this.end(event), { passive: false });
+        this.element.addEventListener('transitionend', () => this.element.style.removeProperty('transition'));
     }
 
     //*                                  Event Handlers
     start(event) {
         event.preventDefault();
         if (event.changedTouches[0].identifier === 0) {             //  Do not handle any more than the first touch
-            this.initial = event.touches[0].clientX / 10;           //  int: Initial touch position
+            this.initial = event.touches[0].clientX / 10;           //  Initial touch position
         }
     }
 
@@ -56,27 +38,26 @@ class SwipeControl {
     end(event) {
         event.preventDefault();
         if (event.changedTouches[0].identifier === 0) {             //  Do not handle any more than the first touch
-            let newPos = (event.changedTouches[0].clientX / 10)     //  int: New touch position
-            this.difference = this.initial - newPos;                //  int: Difference between initial and new position
-            this.element.style.transition = 'left 0.1s'             //  str: Transition effect for movement
+            let newPos = (event.changedTouches[0].clientX / 10)     //  New touch position
+            this.difference = this.initial - newPos;                //  Difference between initial and new position
+            this.element.style.transition = 'left 0.1s'             //  Transition effect for movement
 
             if (this.difference > 0) {
-                this.slideRight();
+                this.swipedRight();
             } else if (this.difference < 0) {
-                this.slideLeft();
+                this.swipedLeft();
             }
-
-            // this.debug(event);
         }
+        this.debugSwiper(event)
     }
 
     //*                                  Controls
 
     handleMovement(event) {
-        const touch = event.touches[0].clientX / 10;            //  int: Current touch position
-        const item = this.currentItem * 100;                    //  int: Current item in percentage
-        let moveX = (this.initial - touch) / 5;                 //  int: Speed of slide movement
-        let movable = moveX < 10;                               //  int: Movable threshold
+        const touch = event.touches[0].clientX / 10;            //  Current touch position
+        const item = this.currentItem * 100;                    //  Current item in percentage
+        let moveX = (this.initial - touch) / 5;                 //  Speed of slide movement
+        let movable = moveX < 10;                               //  Movable threshold
 
 
         //  First item:
@@ -96,47 +77,51 @@ class SwipeControl {
         }
     }
 
-    slideRight() {
+    swipedRight() {
         // First item:
         if (this.difference > this.threshold && -(this.currentItem * 100) !== this.lastItem) {
             this.next();
         } else if (this.threshold > this.difference) {
-            this.element.style.left = -(this.currentItem * 100) + '%';
+            this.stay();
         }
     }
 
-    slideLeft() {
+    swipedLeft() {
         // Not first item:
         if (-this.threshold > this.difference && this.currentItem !== 0) {
             this.previous();
         } else if (-this.threshold < this.difference) {
-            this.element.style.left = -(this.currentItem * 100) + '%';
+            this.stay();
         }
     }
 
     next() {
         // First item:
-        if (!this.currentItem) {
+        if (!this.currentItem && this.currentItem !== this.lastItem) {
             this.element.style.left = -100 + '%';
-            this.currentItem += 1;
+            this.setCurrent();
         } else if (this.currentItem) {
             this.element.style.left = -(this.currentItem * 100) - 100 + '%';
-            this.currentItem += 1;
+            this.setCurrent();
         }
     }
 
     previous() {
         this.element.style.left = -(this.currentItem * 100) + 100 + '%';
-        this.currentItem -= 1;
+        this.setCurrent();
+    }
+
+    stay() {
+        this.element.style.left = -(this.currentItem * 100) + '%';
     }
 
     //*                                  Helpers
-    sync() {
+    setCurrent() {
         this.currentItem =
             parseInt(this.element.style.left.replace(/\D/g, '')) / 100;
     }
 
-    debug(event) {
+    debugSwiper(event) {
         var now = new Date()
         console.log('%cDebugging Variables', 'font-weight: bold')
         console.log(event)
@@ -153,7 +138,6 @@ class SwipeControl {
 
 }
 
-
 //?             Carousel
 //TODO      Base Functionality
 //*     - Finish touch controls (more or less done)
@@ -165,21 +149,21 @@ class SwipeControl {
 //*     - Create an optional 'auto-play' start/stop feature (timeIntervals)
 //*     - Create optional next/previous
 //*         - Optionally disable bubbles when enabled
-class Carousel {
+class Carousel extends SwipeControl {
     constructor(index) {
-        //  Carousel variables
+        super()
         this.carousel =
             document.getElementsByClassName('is-carousel')[index];
-        this.inner =
+        this.element =
             this.carousel.getElementsByClassName('inner')[0];
-        this.imageAmount =
-            this.inner.getElementsByTagName('img').length;
-        this.currentItem = 0;
-
-        //  Selection variables
         this.imageSelector =
             this.carousel.getElementsByClassName('image-selector')[0];
         this.bubbles = [];
+
+        this.itemAmount =
+            this.element.getElementsByTagName('img').length;
+        this.currentItem = 0;
+        this.lastItem = -((this.itemAmount - 1) * 100);
 
         //  Init
         this.createCarousel();
@@ -188,13 +172,16 @@ class Carousel {
     //*                                  Creation
     createCarousel() {
         this.createBubbles();
-        this.attachListeners();
-        this.activeBubble();
+        this.currentActiveBubble();
+        // this.swipeHook();
+        super.swipeEvents();
+        this.carouselEvents();
     }
 
+
     createBubbles() {
-        if (this.imageAmount > 1) {
-            for (let i = 0; i < this.imageAmount; i++) {
+        if (this.itemAmount > 1) {
+            for (let i = 0; i < this.itemAmount; i++) {
                 let wrapper = document.createElement('span');   //
                 wrapper.classList.add('bubble-wrapper');        //
                 let bubble = document.createElement('span');    //
@@ -206,35 +193,27 @@ class Carousel {
         }
     }
 
-    attachListeners() {
+    carouselEvents() {
         //  Initiate touch controls
-        if (this.imageAmount > 1) {
-            const swipe = new SwipeControl(this.inner, this.imageAmount);
-            this.inner.addEventListener('transitionend', () => this.inner.style.removeProperty('transition'));
-
-
+        if (this.itemAmount > 1) {
             //  Handle bubble click functionality
             for (let i = 0; i < this.bubbles.length; i++) {
                 this.bubbles[i].addEventListener("click", () => {
                     this.currentItem = i;
-                    this.switchImage();
-                    this.activeBubble();
-                    swipe.sync();
+                    this.handleBubblePress();
+                    this.currentActiveBubble();
                 });
             }
-
-            // Observe for style mutations
-            this.observer();
         }
     }
 
     //*                                  Controls
-    switchImage() {
-        this.inner.style.transition = 'left 0.1s';
-        this.inner.style.left = -100 * this.currentItem + "%";
+    handleBubblePress() {
+        this.element.style.transition = 'left 0.1s';
+        this.element.style.left = -100 * this.currentItem + "%";
     }
 
-    activeBubble() {
+    currentActiveBubble() {
         this.bubbles.forEach((bubble, index) => {
             if (index === this.currentItem) {
                 bubble.children[0].classList.add("bubble-active");
@@ -245,18 +224,28 @@ class Carousel {
         });
     }
 
-    //*                                  Helpers
-    observer() {
-        const carouselObserver = new MutationObserver(debounce(() => this.handleChange(), 50));
-        carouselObserver.observe(this.inner, { attributes: true });
-    }
-
-    handleChange() {
+    setCurrent() {
         this.currentItem =
-            parseInt(this.inner.style.left.replace(/\D/g, '')) / 100;
-        this.activeBubble();
+            parseInt(this.element.style.left.replace(/\D/g, '')) / 100;
+        this.currentActiveBubble();
     }
 }
+
+function debounce(func, wait, immediate) {
+    var timeout;
+    return function executedFunction() {
+        var context = this;
+        var args = arguments;
+        var later = function () {
+            timeout = null;
+            if (!immediate) func.apply(context, args);
+        };
+        var callNow = immediate && !timeout;
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+        if (callNow) func.apply(context, args);
+    };
+};
 
 let carouselOptions = {
     autoplay: false,
@@ -266,5 +255,5 @@ let carouselOptions = {
     dragControls: false
 }
 
-new Carousel(0);
-new Carousel(1);
+let first = new Carousel(0);
+let second = new Carousel(1);
