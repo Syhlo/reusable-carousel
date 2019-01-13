@@ -1,21 +1,15 @@
 function debounce(func, wait, immediate) {
     var timeout;
-
     return function executedFunction() {
         var context = this;
         var args = arguments;
-
         var later = function () {
             timeout = null;
             if (!immediate) func.apply(context, args);
         };
-
         var callNow = immediate && !timeout;
-
         clearTimeout(timeout);
-
         timeout = setTimeout(later, wait);
-
         if (callNow) func.apply(context, args);
     };
 };
@@ -35,10 +29,9 @@ class SwipeControl {
         this.threshold = 5;                                     //  int: % of item before triggering next slide
         this.currentItem = 0;                                   //  int: Current item
         this.lastItem = -((amountOfItems - 1) * 100);           //  int: Last item
-        this.attachListeners(element);
     }
 
-    attachListeners(element) {
+    swipeListeners(element) {
         element.addEventListener('touchstart', (event) => this.start(event), { passive: false });
         element.addEventListener('touchmove', (event) => this.move(event), { passive: false });
         element.addEventListener('touchend', (event) => this.end(event), { passive: false });
