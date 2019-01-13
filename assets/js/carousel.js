@@ -5,12 +5,13 @@
 //?  Goal: make SwipeControl reusable for similar assets
 class SwipeControl {
     constructor() {
-        this.element;                                           //  Element to listen on
-        this.initial;                                           //  Initial touch position
-        this.difference;                                        //  Difference between initial and new position
-        this.threshold = 5;                                     //  % of item before triggering next slide
-        this.currentItem;                                       //  Current item
-        this.lastItem;                                          //  Last item
+        this.element;                                               //  Element to listen on
+        this.initial;                                               //  Initial touch position
+        this.difference;                                            //  Difference between initial and new position
+        this.threshold = 5;                                         //  % of item before triggering next slide
+        this.currentItem;                                           //  Current item
+        this.currentPercent;
+        this.lastItem;                                              //  Last item
     }
 
     swipeEvents() {
@@ -25,6 +26,7 @@ class SwipeControl {
         event.preventDefault();
         if (event.changedTouches[0].identifier === 0) {             //  Do not handle any more than the first touch
             this.initial = event.touches[0].clientX / 10;           //  Initial touch position
+            this.currentPercent = -(this.currentItem * 100)         //  Current item in percentage
         }
     }
 
@@ -52,34 +54,33 @@ class SwipeControl {
     }
 
     //*                                  Controls
-
     handleMovement(event) {
-        const touch = event.touches[0].clientX / 10;            //  Current touch position
-        const item = this.currentItem * 100;                    //  Current item in percentage
-        let moveX = (this.initial - touch) / 5;                 //  Speed of slide movement
-        let movable = moveX < 10;                               //  Movable threshold
+        const touch = event.touches[0].clientX / 10;                //  Current touch position
+        let moveX = (this.initial - touch) / 10;                     //  Speed of slide movement
+        let movable = moveX < 2.5 && moveX > -2.5;                  //  Movable threshold
 
 
         //  First item:
         if (!this.currentItem && moveX > 0 && movable) {
             this.element.style.left = -moveX + '%';
         }
+
         //  Subsequent item(s):
         else if (this.currentItem && movable) {
             //  Not on last item
-            if (-(this.currentItem * 100) !== this.lastItem) {
-                this.element.style.left = -item - moveX + '%';
+            if (this.currentPercent !== this.lastItem) {
+                this.element.style.left = this.currentPercent - moveX + '%';
             }
             // On last item
-            else if (-(this.currentItem * 100) === this.lastItem && moveX < 0) {
-                this.element.style.left = -item - moveX + '%';
+            else if (this.currentPercent === this.lastItem && moveX < 0) {
+                this.element.style.left = this.currentPercent - moveX + '%';
             }
         }
     }
 
     swipedRight() {
         // First item:
-        if (this.difference > this.threshold && -(this.currentItem * 100) !== this.lastItem) {
+        if (this.difference > this.threshold && this.currentPercent !== this.lastItem) {
             this.next();
         } else if (this.threshold > this.difference) {
             this.stay();
@@ -99,31 +100,31 @@ class SwipeControl {
         // First item:
         if (!this.currentItem && this.currentItem !== this.lastItem) {
             this.element.style.left = -100 + '%';
-            this.setCurrent();
+            this.setCurrentItem();
         } else if (this.currentItem) {
-            this.element.style.left = -(this.currentItem * 100) - 100 + '%';
-            this.setCurrent();
+            this.element.style.left = this.currentPercent - 100 + '%';
+            this.setCurrentItem();
         }
     }
 
     previous() {
-        this.element.style.left = -(this.currentItem * 100) + 100 + '%';
-        this.setCurrent();
+        this.element.style.left = this.currentPercent + 100 + '%';
+        this.setCurrentItem();
     }
 
     stay() {
-        this.element.style.left = -(this.currentItem * 100) + '%';
+        this.element.style.left = this.currentPercent + '%';
     }
 
     //*                                  Helpers
-    setCurrent() {
+    setCurrentItem() {
         this.currentItem =
             parseInt(this.element.style.left.replace(/\D/g, '')) / 100;
     }
 
     debugSwiper(event) {
         var now = new Date()
-        console.log('%cDebugging Variables', 'font-weight: bold')
+        console.log('%cDebugging Values', 'font-weight: bold')
         console.log(event)
         console.log(
             'initial: ' + this.initial + '\n' +
@@ -178,17 +179,16 @@ class Carousel extends SwipeControl {
         this.carouselEvents();
     }
 
-
     createBubbles() {
         if (this.itemAmount > 1) {
             for (let i = 0; i < this.itemAmount; i++) {
-                let wrapper = document.createElement('span');   //
-                wrapper.classList.add('bubble-wrapper');        //
-                let bubble = document.createElement('span');    //
-                bubble.classList.add('bubble');                 //
-                wrapper.appendChild(bubble);                    //  Put the bubble in a wrapper
-                this.imageSelector.appendChild(wrapper);        //  Add bubble to image selector
-                this.bubbles.push(wrapper);                     //  Add bubble to bubbles array for listeners
+                let bubble = document.createElement('span');
+                bubble.className = 'bubble';
+                let wrapper = document.createElement('span');
+                wrapper.className = 'bubble-wrapper';
+                wrapper.appendChild(bubble);                        //  Put the bubble in a wrapper
+                this.imageSelector.appendChild(wrapper);            //  Add bubble to image selector
+                this.bubbles.push(wrapper);                         //  Add bubble to bubbles array for listeners
             }
         }
     }
@@ -224,7 +224,7 @@ class Carousel extends SwipeControl {
         });
     }
 
-    setCurrent() {
+    setCurrentItem() {
         this.currentItem =
             parseInt(this.element.style.left.replace(/\D/g, '')) / 100;
         this.currentActiveBubble();
