@@ -62,7 +62,6 @@
   /* display: block; */
   position: absolute;
   z-index: 3;
-  top: 50%;
   transform: rotate(180deg);
   transform-origin: 50% 50%;
   left: 5%;
@@ -72,13 +71,13 @@
   /* display: block; */
   position: absolute;
   z-index: 3;
-  top: 50%;
   right: 5%;
 }
 
 .arrow {
   width: 42px;
   height: 42px;
+  top: 50%;
   fill-opacity:.5;
   fill:#fff;
   stroke-width:2.5;
@@ -131,6 +130,10 @@
     margin: 0 10px;
   }
   
+  .arrow {
+    top: 45%;
+  }
+  
 }
 
 /* Mobile */
@@ -156,6 +159,10 @@
     margin: 0 10px;
   }
   
+  .arrow {
+    top: 40%;
+  }
+  
 }
 
 /* Super small mobile */
@@ -165,12 +172,12 @@
   }
   
   .is-carousel {
-    height: 150px;
+    height: 160px;
     margin: -5%;
   }
   
   .inner img {
-    height: 150px;
+    height: 160px;
   }
   
   .image-selector {
@@ -184,6 +191,7 @@
   .arrow {
     width: 32px;
     height: 32px;
+    top: 42%;
   }
   
 }
