@@ -142,7 +142,6 @@ class SwipeControl {
 
 //?             Carousel
 //TODO      Base Functionality
-//*     - Finish touch controls (more or less done)
 //*     - Start mouse dragging controls
 
 //TODO      Optional Settings
@@ -175,6 +174,7 @@ class Carousel extends SwipeControl {
     createCarousel() {
         this.createBubbles();
         this.currentActiveBubble();
+        this.createArrows();
         this.swipeEvents();
         this.buildControls();
     }
@@ -191,6 +191,14 @@ class Carousel extends SwipeControl {
                 this.bubbles.push(wrapper);                         //  Add bubble to bubbles array for listeners
             }
         }
+    }
+
+    createArrows() {
+        let arrows = [...document.getElementsByClassName('arrow')];
+        arrows.forEach((arrow) => {
+            arrow.innerHTML =
+                '<path d="m39.964 126.15 61.339-61.339-61.339-61.339-12.268 12.268 49.071 49.071-49.071 49.071 12.268 12.268" />';
+        });
     }
 
     buildControls() {
@@ -221,6 +229,7 @@ class Carousel extends SwipeControl {
     }
 
     handleArrowPress(index) {
+        this.element.style.transition = 'left 0.1s';
         if (index === 0) {
             this.previous();
         } else {
@@ -251,8 +260,9 @@ class Carousel extends SwipeControl {
 
 let carouselOptions = {
     autoplay: false,
+    autoplaySpeed: 2,
     arrowButtons: false,
-    bubbles: false,
+    bubbleButtons: false,
     swipeControls: false,
     dragControls: false
 }
