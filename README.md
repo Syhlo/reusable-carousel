@@ -6,7 +6,7 @@ This repository contains my personal responsive carousel asset. Currently it sup
 
 [Demonstration](https://codepen.io/Syh/full/VqEMNd)
 
-Setting up a carousel is as easy as using the following templates:
+Setting up a slider is as easy as using the following templates:
 
 #### HTML template
 ```html
