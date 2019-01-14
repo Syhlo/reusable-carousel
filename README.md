@@ -1,10 +1,10 @@
-# Carousel Asset
+# Syhlo's Carousel Asset
 
 ###### *Currently being developed.*
 
-This repository contains my personal responsive carousel asset. Currently it supports touch screen swiping, arrow controls, bubble controls. It automatically adds the images in `.inner` to the carousel. It will fill the container's dimensions it is placed in.
+This repository contains my personal responsive carousel asset. Currently it supports touch screen swiping, arrow controls, and bubble controls. It automatically adds the images in `.inner` to the carousel.
 
-[Live Example](https://codepen.io/Syh/full/VqEMNd)
+[Live Demonstration](https://codepen.io/Syh/full/VqEMNd)
 
 Setting up a carousel is as easy as using the following templates:
 
