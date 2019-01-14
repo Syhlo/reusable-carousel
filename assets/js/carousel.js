@@ -2,6 +2,7 @@
 //TODO      Base Functionality
 //*     - Add .throttle and .debounce when applicable
 //*         - throttle the movement
+//*     - Allow for 
 //?  Goal: make SwipeControl reusable for similar assets
 class SwipeControl {
     constructor() {
@@ -56,24 +57,24 @@ class SwipeControl {
     //*                                  Controls
     handleMovement(event) {
         const touch = event.touches[0].clientX / 10;                //  Current touch position
-        let moveX = (this.initial - touch) / 10;                    //  Speed of slide movement
-        let movable = moveX < 2.5 && moveX > -2.5;                  //  Movable threshold
+        let moveItem = (this.initial - touch) / 10;                 //  Speed of item movement
+        let movable = moveItem < 2.5 && moveItem > -2.5;            //  Movable threshold
 
 
         //  First item:
-        if (!this.currentItem && moveX > 0 && movable) {
-            this.element.style.left = -moveX + '%';
+        if (!this.currentItem && moveItem > 0 && movable) {
+            this.element.style.left = -moveItem + '%';
         }
 
         //  Subsequent item(s):
         else if (this.currentItem && movable) {
             //  Not on last item
             if (this.currentPercent !== this.lastItem) {
-                this.element.style.left = this.currentPercent - moveX + '%';
+                this.element.style.left = this.currentPercent - moveItem + '%';
             }
             // On last item
-            else if (this.currentPercent === this.lastItem && moveX < 0) {
-                this.element.style.left = this.currentPercent - moveX + '%';
+            else if (this.currentPercent === this.lastItem && moveItem < 0) {
+                this.element.style.left = this.currentPercent - moveItem + '%';
             }
         }
     }
@@ -145,13 +146,11 @@ class SwipeControl {
 //*     - Start mouse dragging controls
 
 //TODO      Optional Settings
-//*     - Take in an object to enable/disable features (?)
+//*     - Take in an object to enable/disable features
 //*     - Allow for custom width/height (I might use SCSS for this)
 //*     - Create an optional 'auto-play' start/stop feature (timeIntervals)
-//*     - Create optional next/previous
-//*         - Optionally disable bubbles when enabled
 class Carousel extends SwipeControl {
-    constructor(index) {
+    constructor(index, options = {}) {
         super()
         this.carousel =
             document.getElementsByClassName('is-carousel')[index];
@@ -165,13 +164,14 @@ class Carousel extends SwipeControl {
             this.element.getElementsByTagName('img').length;
         this.currentItem = 0;
         this.lastItem = -((this.itemAmount - 1) * 100);
+        console.log(options.bubbleButtons);
 
         //  Init
         this.createCarousel();
     }
 
     //*                                  Creation
-    createCarousel() {
+    createCarousel(options) {
         this.createBubbles();
         this.currentActiveBubble();
         this.createArrows();
@@ -179,7 +179,7 @@ class Carousel extends SwipeControl {
         this.buildControls();
     }
 
-    createBubbles() {
+    createBubbles(create) {
         if (this.itemAmount > 1) {
             for (let i = 0; i < this.itemAmount; i++) {
                 let bubble = document.createElement('span');
@@ -193,7 +193,7 @@ class Carousel extends SwipeControl {
         }
     }
 
-    createArrows() {
+    createArrows(create) {
         let arrows = [...document.getElementsByClassName('arrow')];
         arrows.forEach((arrow) => {
             arrow.innerHTML =
@@ -258,7 +258,8 @@ class Carousel extends SwipeControl {
     }
 }
 
-let carouselOptions = {
+//  Example Options (Not Functional)
+let options = {
     autoplay: false,
     autoplaySpeed: 2,
     arrowButtons: false,
@@ -267,5 +268,13 @@ let carouselOptions = {
     dragControls: false
 }
 
-let first = new Carousel(0);
+new Carousel(0, {
+    autoplay: false,
+    autoplaySpeed: 2,
+    arrowButtons: false,
+    bubbleButtons: false,
+    swipeControls: false,
+    dragControls: false
+});
+
 let second = new Carousel(1);
