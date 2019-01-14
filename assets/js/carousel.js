@@ -50,13 +50,13 @@ class SwipeControl {
                 this.swipedLeft();
             }
         }
-        this.debugSwiper(event)
+        // this.debugSwiper(event)
     }
 
     //*                                  Controls
     handleMovement(event) {
         const touch = event.touches[0].clientX / 10;                //  Current touch position
-        let moveX = (this.initial - touch) / 10;                     //  Speed of slide movement
+        let moveX = (this.initial - touch) / 10;                    //  Speed of slide movement
         let movable = moveX < 2.5 && moveX > -2.5;                  //  Movable threshold
 
 
@@ -175,8 +175,8 @@ class Carousel extends SwipeControl {
     createCarousel() {
         this.createBubbles();
         this.currentActiveBubble();
-        super.swipeEvents();
-        this.carouselEvents();
+        this.swipeEvents();
+        this.buildControls();
     }
 
     createBubbles() {
@@ -193,8 +193,7 @@ class Carousel extends SwipeControl {
         }
     }
 
-    carouselEvents() {
-        //  Initiate touch controls
+    buildControls() {
         if (this.itemAmount > 1) {
             //  Handle arrow click
             let arrows = [...this.carousel.getElementsByClassName('arrow')];
