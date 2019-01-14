@@ -146,7 +146,7 @@ class SwipeControl {
 //*     - Start mouse dragging controls
 
 //TODO      Optional Settings
-//*     - Take in an object to enable/disable features
+//*     - Handle options
 //*     - Allow for custom width/height (I might use SCSS for this)
 //*     - Create an optional 'auto-play' start/stop feature (timeIntervals)
 class Carousel extends SwipeControl {
@@ -164,14 +164,14 @@ class Carousel extends SwipeControl {
             this.element.getElementsByTagName('img').length;
         this.currentItem = 0;
         this.lastItem = -((this.itemAmount - 1) * 100);
-        console.log(options.bubbleButtons);
+        this.options = options;
 
         //  Init
         this.createCarousel();
     }
 
     //*                                  Creation
-    createCarousel(options) {
+    createCarousel() {
         this.createBubbles();
         this.currentActiveBubble();
         this.createArrows();
@@ -179,8 +179,8 @@ class Carousel extends SwipeControl {
         this.buildControls();
     }
 
-    createBubbles(create) {
-        if (this.itemAmount > 1) {
+    createBubbles() {
+        if (this.build('bubbles') && this.itemAmount > 1) {
             for (let i = 0; i < this.itemAmount; i++) {
                 let bubble = document.createElement('span');
                 bubble.className = 'bubble';
@@ -193,8 +193,8 @@ class Carousel extends SwipeControl {
         }
     }
 
-    createArrows(create) {
-        let arrows = [...document.getElementsByClassName('arrow')];
+    createArrows() {
+        let arrows = [...document.querySelectorAll('.is-carousel > .arrow')];
         arrows.forEach((arrow) => {
             arrow.innerHTML =
                 '<path d="m39.964 126.15 61.339-61.339-61.339-61.339-12.268 12.268 49.071 49.071-49.071 49.071 12.268 12.268" />';
@@ -256,25 +256,28 @@ class Carousel extends SwipeControl {
             }
         });
     }
+
+    build(option) {
+        return Object.keys(this.options).includes(option) ?
+            typeof this.options[option] === 'boolean' ? this.options[option] : false
+            : false
+    }
 }
 
-//  Example Options (Not Functional)
-let options = {
+let first = new Carousel(0, {
+    bubbles: true,
+    arrows: true,
+    swiping: false,
+    dragging: false,
     autoplay: false,
-    autoplaySpeed: 2,
-    arrowButtons: false,
-    bubbleButtons: false,
-    swipeControls: false,
-    dragControls: false
-}
-
-new Carousel(0, {
-    autoplay: false,
-    autoplaySpeed: 2,
-    arrowButtons: false,
-    bubbleButtons: false,
-    swipeControls: false,
-    dragControls: false
+    autoplaySpeed: 2
 });
 
-let second = new Carousel(1);
+let second = new Carousel(1, {
+    bubbles: false,
+    arrows: false,
+    swiping: false,
+    dragging: false,
+    autoplay: false,
+    autoplaySpeed: 2
+});
