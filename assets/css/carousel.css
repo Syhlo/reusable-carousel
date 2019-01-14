@@ -59,8 +59,6 @@
   top: 45%;
   transform: rotate(180deg);
   transform-origin: 50% 50%;
-  width: 40px;
-  height: 40px;
   left: 5%;
 }
 
@@ -68,13 +66,13 @@
   /* display: block; */
   position: absolute;
   z-index: 3;
-  width: 40px;
-  height: 40px;
   top: 45%;
   right: 5%;
 }
 
 .arrow {
+  width: 42px;
+  height: 42px;
   fill-opacity:.5;
   fill:#fff;
   stroke-width:2.5;
@@ -157,7 +155,7 @@
 /* Super small mobile */
 @media screen and (max-width: 425px) {
   .hero .box {
-    width: 90%;
+    width: 95%;
   }
   
   .is-carousel {
@@ -175,6 +173,11 @@
   
   .bubble-wrapper {
     margin: 0 5px;
+  }
+
+  .arrow {
+    width: 32px;
+    height: 32px;
   }
   
 }
