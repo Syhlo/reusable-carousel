@@ -194,11 +194,13 @@ class Carousel extends SwipeControl {
     }
 
     createArrows() {
-        let arrows = [...document.querySelectorAll('.is-carousel > .arrow')];
-        arrows.forEach((arrow) => {
-            arrow.innerHTML =
-                '<path d="m39.964 126.15 61.339-61.339-61.339-61.339-12.268 12.268 49.071 49.071-49.071 49.071 12.268 12.268" />';
-        });
+        if (this.build('arrows') && this.itemAmount > 1) {
+            let arrows = [...this.carousel.querySelectorAll('.is-carousel > .arrow')];
+            arrows.forEach((arrow) => {
+                arrow.innerHTML =
+                    '<path d="m39.964 126.15 61.339-61.339-61.339-61.339-12.268 12.268 49.071 49.071-49.071 49.071 12.268 12.268" />';
+            });
+        }
     }
 
     buildControls() {
@@ -266,7 +268,7 @@ class Carousel extends SwipeControl {
 
 let first = new Carousel(0, {
     bubbles: true,
-    arrows: true,
+    arrows: false,
     swiping: false,
     dragging: false,
     autoplay: false,
@@ -275,7 +277,7 @@ let first = new Carousel(0, {
 
 let second = new Carousel(1, {
     bubbles: false,
-    arrows: false,
+    arrows: true,
     swiping: false,
     dragging: false,
     autoplay: false,
