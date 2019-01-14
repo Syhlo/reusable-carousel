@@ -10,7 +10,7 @@ class SwipeControl {
         this.difference;                                            //  Difference between initial and new position
         this.threshold = 5;                                         //  % of item before triggering next slide
         this.currentItem;                                           //  Current item
-        this.currentPercent;
+        this.currentPercent = -0;
         this.lastItem;                                              //  Last item
     }
 
@@ -98,28 +98,29 @@ class SwipeControl {
 
     next() {
         // First item:
-        if (!this.currentItem && this.currentItem !== this.lastItem) {
-            this.element.style.left = -100 + '%';
-            this.setCurrentItem();
-        } else if (this.currentItem) {
+        if (this.currentPercent !== this.lastItem) {
             this.element.style.left = this.currentPercent - 100 + '%';
             this.setCurrentItem();
         }
     }
 
     previous() {
-        this.element.style.left = this.currentPercent + 100 + '%';
-        this.setCurrentItem();
+        if (this.currentItem !== -0) {
+            this.element.style.left = this.currentPercent + 100 + '%';
+            this.setCurrentItem();
+        }
     }
 
     stay() {
         this.element.style.left = this.currentPercent + '%';
+        this.setCurrentItem();
     }
 
     //*                                  Helpers
     setCurrentItem() {
         this.currentItem =
             parseInt(this.element.style.left.replace(/\D/g, '')) / 100;
+        this.currentPercent = -(this.currentItem * 100);
     }
 
     debugSwiper(event) {
@@ -174,7 +175,6 @@ class Carousel extends SwipeControl {
     createCarousel() {
         this.createBubbles();
         this.currentActiveBubble();
-        // this.swipeHook();
         super.swipeEvents();
         this.carouselEvents();
     }
@@ -196,7 +196,13 @@ class Carousel extends SwipeControl {
     carouselEvents() {
         //  Initiate touch controls
         if (this.itemAmount > 1) {
-            //  Handle bubble click functionality
+            //  Handle arrow click
+            let arrows = [...this.carousel.getElementsByClassName('arrow')];
+            arrows.forEach((arrow, i) => arrow.addEventListener('click', () =>
+                this.handleArrowPress(i)))
+
+
+            //  Handle bubble click
             for (let i = 0; i < this.bubbles.length; i++) {
                 this.bubbles[i].addEventListener("click", () => {
                     this.currentItem = i;
@@ -204,6 +210,7 @@ class Carousel extends SwipeControl {
                     this.currentActiveBubble();
                 });
             }
+
         }
     }
 
@@ -211,6 +218,24 @@ class Carousel extends SwipeControl {
     handleBubblePress() {
         this.element.style.transition = 'left 0.1s';
         this.element.style.left = -100 * this.currentItem + "%";
+        this.setCurrentItem();
+    }
+
+    handleArrowPress(index) {
+        if (index === 0) {
+            this.previous();
+        } else {
+            this.next();
+        }
+    }
+
+
+    //*                                 Helper Methods
+    setCurrentItem() {
+        this.currentItem =
+            parseInt(this.element.style.left.replace(/\D/g, '')) / 100;
+        this.currentPercent = -(this.currentItem * 100);
+        this.currentActiveBubble();
     }
 
     currentActiveBubble() {
@@ -223,29 +248,7 @@ class Carousel extends SwipeControl {
             }
         });
     }
-
-    setCurrentItem() {
-        this.currentItem =
-            parseInt(this.element.style.left.replace(/\D/g, '')) / 100;
-        this.currentActiveBubble();
-    }
 }
-
-function debounce(func, wait, immediate) {
-    var timeout;
-    return function executedFunction() {
-        var context = this;
-        var args = arguments;
-        var later = function () {
-            timeout = null;
-            if (!immediate) func.apply(context, args);
-        };
-        var callNow = immediate && !timeout;
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-        if (callNow) func.apply(context, args);
-    };
-};
 
 let carouselOptions = {
     autoplay: false,

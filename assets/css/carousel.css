@@ -52,10 +52,46 @@
   cursor: pointer;
 }
 
+.left-arrow {
+  /* display: block; */
+  position: absolute;
+  z-index: 3;
+  top: 45%;
+  transform: rotate(180deg);
+  transform-origin: 50% 50%;
+  width: 40px;
+  height: 40px;
+  left: 5%;
+}
+
+.right-arrow {
+  /* display: block; */
+  position: absolute;
+  z-index: 3;
+  width: 40px;
+  height: 40px;
+  top: 45%;
+  right: 5%;
+}
+
+.arrow {
+  fill-opacity:.5;
+  fill:#fff;
+  stroke-width:2.5;
+  stroke:#333;
+  cursor: pointer;
+}
+
+
 /* Fixes sticky hover on mobile (Lv 4 Media Query) */
 @media (hover:hover) {
     .bubble:hover {
       background-color: rgba(255,255,255,0.75);
+    }
+
+    .arrow:hover path {
+      fill: #fff;
+      fill-opacity: .75;
     }
 }
 
