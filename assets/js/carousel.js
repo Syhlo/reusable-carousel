@@ -2,7 +2,6 @@
 //TODO      Base Functionality
 //*     - Add .throttle and .debounce when applicable
 //*         - throttle the movement
-//*     - Allow for 
 //?  Goal: make SwipeControl reusable for similar assets
 class SwipeControl {
     constructor() {
@@ -144,9 +143,6 @@ class SwipeControl {
 //?             Carousel
 //TODO      Base Functionality
 //*     - Start mouse dragging controls
-
-//TODO      Optional Settings
-//*     - Handle options
 //*     - Allow for custom width/height (I might use SCSS for this)
 //*     - Create an optional 'auto-play' start/stop feature (timeIntervals)
 class Carousel extends SwipeControl {
@@ -201,6 +197,10 @@ class Carousel extends SwipeControl {
                     '<path d="m39.964 126.15 61.339-61.339-61.339-61.339-12.268 12.268 49.071 49.071-49.071 49.071 12.268 12.268" />';
             });
         }
+    }
+
+    handleAutoplay() {
+
     }
 
     buildControls() {
