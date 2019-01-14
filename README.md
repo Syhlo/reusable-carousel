@@ -1,4 +1,4 @@
-# Syhlo's Carousel Asset
+# Syhlo's Slider Asset
 
 ###### *Currently being developed.*
 
