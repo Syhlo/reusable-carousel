@@ -31,8 +31,9 @@ new Carousel('name', {
     arrows: true,
     swiping: true,
     dragging: true,
+    count: true,
     autoplay: true,
-    startOnload: true,
+    startOnload: false,
     autoplaySpeed: 2000
 });
 ```
