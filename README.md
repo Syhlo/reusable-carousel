@@ -38,7 +38,7 @@ new Carousel('name', {
 ```
 ##### Steps:
 
-* Update the name in the JavaScript as well. 
+* Update the ID name in the JavaScript as well. 
 * Tweak the options to your liking per carousel. 
 * `autoplaySpeed` will be in milliseconds (not implemented yet). 
 
