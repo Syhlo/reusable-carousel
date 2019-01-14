@@ -271,8 +271,9 @@ let first = new Carousel('first', {
     arrows: false,
     swiping: false,
     dragging: false,
+    count: false,
     autoplay: false,
-    autoplaySpeed: 2
+    autoplaySpeed: 2000
 });
 
 let second = new Carousel('second', {
@@ -280,6 +281,7 @@ let second = new Carousel('second', {
     arrows: true,
     swiping: false,
     dragging: false,
+    count: false,
     autoplay: false,
-    autoplaySpeed: 2
+    autoplaySpeed: 2000
 });
