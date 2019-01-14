@@ -146,10 +146,10 @@ class SwipeControl {
 //*     - Allow for custom width/height (I might use SCSS for this)
 //*     - Create an optional 'auto-play' start/stop feature (timeIntervals)
 class Carousel extends SwipeControl {
-    constructor(index, options = {}) {
+    constructor(id, options = {}) {
         super()
         this.carousel =
-            document.getElementsByClassName('is-carousel')[index];
+            document.getElementById(id);
         this.element =
             this.carousel.getElementsByClassName('inner')[0];
         this.imageSelector =
@@ -266,7 +266,7 @@ class Carousel extends SwipeControl {
     }
 }
 
-let first = new Carousel(0, {
+let first = new Carousel('first', {
     bubbles: true,
     arrows: false,
     swiping: false,
@@ -275,7 +275,7 @@ let first = new Carousel(0, {
     autoplaySpeed: 2
 });
 
-let second = new Carousel(1, {
+let second = new Carousel('second', {
     bubbles: false,
     arrows: true,
     swiping: false,
