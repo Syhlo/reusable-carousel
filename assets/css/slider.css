@@ -117,7 +117,7 @@
       cursor: pointer;
     }
 
-    .arrow:hover path {
+    .arrow:hover path, .arrow:hover {
       fill-opacity: .75;
       cursor: pointer;
     }
