@@ -36,7 +36,7 @@ new Carousel('name', {
     count: true,
     autoplay: true,
     startOnload: false,
-    autoplaySpeed: 2000
+    autoplaySpeed: 2500
 });
 ```
 ##### Steps:
