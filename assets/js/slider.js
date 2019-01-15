@@ -144,7 +144,7 @@ class SwipeControl {
 //*     - Start mouse dragging controls
 //*     - Create a 'count' (e.g. slide 2/6) in top right
 //*     - All controls should loop forward/backwards
-class slider extends SwipeControl {
+class Slider extends SwipeControl {
     constructor(id, options = {}) {
         super()
         // Elements
@@ -373,7 +373,7 @@ class slider extends SwipeControl {
     }
 }
 
-let first = new slider('first', {
+let first = new Slider('first', {
     bubbles: true,
     arrows: false,
     swiping: false,
@@ -384,7 +384,7 @@ let first = new slider('first', {
     autoplaySpeed: 2500
 });
 
-let second = new slider('second', {
+let second = new Slider('second', {
     bubbles: false,
     arrows: true,
     swiping: false,
