@@ -12,7 +12,7 @@ Setting up a slider is as easy as modifying the below templates and including sl
 
 #### HTML template
 ```html
-<div class="is-carousel" id="name">
+<div class="is-slider" id="name">
 	<svg class="left-arrow arrow" viewBox="0 0 129 129" xmlns="http://www.w3.org/2000/svg"></svg>
 	<svg class="right-arrow arrow" viewBox="0 0 129 129" xmlns="http://www.w3.org/2000/svg"></svg>
 
@@ -24,11 +24,11 @@ Setting up a slider is as easy as modifying the below templates and including sl
 </div>
 ```
 ##### Steps: 
-* Change the ID to your desired carousel name.
+* Change the ID to your desired slider name.
 
 #### JavaScript template
 ```javascript
-new Carousel('first', {
+new Slider('first', {
     // Controls
     bubbles: true,
     arrows: true,
@@ -47,6 +47,6 @@ new Carousel('first', {
 ##### Steps:
 
 * Update the ID name in the JavaScript as well. 
-* Tweak the options to your liking per carousel. 
+* Tweak the options of your slider to your liking. 
 
 If no option was provided or the incorrect data type was used it will default to `false`.
