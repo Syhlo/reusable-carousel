@@ -2,7 +2,7 @@
 
 ###### *Currently being developed.*
 
-This repository contains my personal responsive slider asset. Currently it supports touch screen swiping, arrow controls, and bubble controls. It automatically adds the images in `.inner` to the slider.
+This repository contains my personal responsive slider asset. Currently it supports touch screen swiping, arrow controls, bubble controls, and looping autoplay. It automatically adds the images in `.inner` to the slider.
 
 Preview the features: [Demonstration](https://codepen.io/Syh/full/VqEMNd)
 
