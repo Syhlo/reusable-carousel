@@ -1,6 +1,6 @@
 
 @import url('https://fonts.googleapis.com/css?family=Open+Sans');
-.is-carousel {
+.is-slider {
   font-family: 'Open Sans', sans-serif;
 }
 
@@ -18,7 +18,7 @@
   border-radius: 0;
 }
 
-.is-carousel {
+.is-slider {
   position: relative;
   height: 500px;
   border: 1px solid rgb(112,122,122,0.9);
@@ -167,7 +167,7 @@
   .hero .box {
     width: 85%;
   }
-  .is-carousel {
+  .is-slider {
     height: 350px;
     margin: -1%;
   }
@@ -196,7 +196,7 @@
     width: 90%;
   }
   
-  .is-carousel {
+  .is-slider {
     height: 225px;
     margin: -2%;
   }
@@ -225,7 +225,7 @@
     width: 95%;
   }
   
-  .is-carousel {
+  .is-slider {
     height: 170px;
     margin: -5%;
   }
