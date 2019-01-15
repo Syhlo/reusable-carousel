@@ -35,13 +35,13 @@ new Carousel('first', {
     swiping: true,
     dragging: true,
     autoplay: true,
-
-    // Display numbers, e.g. slide 2/5
-    numbers: true,
-
+    
     // Autoplay settings
     autoplayOnload: false,
     autoplaySpeed: 2500,
+
+    // Display numbers, e.g. slide 2/5
+    numbers: true
 });
 ```
 ##### Steps:
