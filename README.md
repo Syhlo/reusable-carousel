@@ -28,21 +28,25 @@ Setting up a slider is as easy as modifying the below templates and including sl
 
 #### JavaScript template
 ```javascript
-new Carousel('name', {
+new Carousel('first', {
+    // Controls
     bubbles: true,
     arrows: true,
     swiping: true,
     dragging: true,
-    count: true,
     autoplay: true,
-    startOnload: false,
-    autoplaySpeed: 2500
+    
+    // Autoplay settings
+    autoplayOnload: false,
+    autoplaySpeed: 2500,
+
+    // Display numbers, e.g. slide 2/5
+    numbers: true
 });
 ```
 ##### Steps:
 
 * Update the ID name in the JavaScript as well. 
 * Tweak the options to your liking per carousel. 
-* `autoplaySpeed` will be in milliseconds (not implemented yet). 
 
 If no option was provided or the incorrect data type was used it will default to `false`.
