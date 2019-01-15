@@ -2,9 +2,9 @@
 
 ###### *Currently being developed.*
 
-This repository contains my personal responsive slider asset. Currently it supports touch screen swiping, arrow controls, and bubble controls. It automatically adds the images in `.inner` to the slider.
+This repository contains my personal responsive slider asset. Currently it supports touch screen swiping, arrow controls, bubble controls, and looping autoplay. It automatically adds the images in `.inner` to the slider.
 
-[Demonstration](https://codepen.io/Syh/full/VqEMNd)
+Preview the features: [Demonstration](https://codepen.io/Syh/full/VqEMNd)
 
 Setting up a slider is as easy as modifying the below templates and including slider.js and slider.css into your HTML file.
 
@@ -36,7 +36,7 @@ new Carousel('name', {
     count: true,
     autoplay: true,
     startOnload: false,
-    autoplaySpeed: 2000
+    autoplaySpeed: 2500
 });
 ```
 ##### Steps:
