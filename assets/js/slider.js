@@ -139,21 +139,21 @@ class SwipeControl {
 
 }
 
-//?             Carousel
+//?             slider
 //TODO      Base Functionality
 //*     - Start mouse dragging controls
 //*     - Create a 'count' (e.g. slide 2/6) in top right
 //*     - All controls should loop forward/backwards
-class Carousel extends SwipeControl {
+class slider extends SwipeControl {
     constructor(id, options = {}) {
         super()
         // Elements
-        this.carousel =
+        this.slider =
             document.getElementById(id);
         this.element =
-            this.carousel.getElementsByClassName('inner')[0];
+            this.slider.getElementsByClassName('inner')[0];
         this.imageSelector =
-            this.carousel.getElementsByClassName('image-selector')[0];
+            this.slider.getElementsByClassName('image-selector')[0];
         this.bubbles = [];
 
         // Slide information
@@ -167,11 +167,11 @@ class Carousel extends SwipeControl {
         this.playing = this.build('autoplayOnload') ? false : true;
 
         //  Init
-        this.createCarousel();
+        this.createslider();
     }
 
-    //*                                  Creation
-    createCarousel() {
+    //*                                  Slider Creation
+    createslider() {
         this.createBubbles();
         this.currentActiveBubble();
         this.createArrows();
@@ -196,7 +196,7 @@ class Carousel extends SwipeControl {
 
     createArrows() {
         if (this.build('arrows') && this.itemAmount > 1) {
-            let arrows = [...this.carousel.querySelectorAll('.is-carousel > .arrow')];
+            let arrows = [...this.slider.querySelectorAll('.is-slider > .arrow')];
             arrows.forEach((arrow) => {
                 arrow.innerHTML =
                     '<path d="m39.964 126.15 61.339-61.339-61.339-61.339-12.268 12.268 49.071 49.071-49.071 49.071 12.268 12.268" />';
@@ -206,7 +206,7 @@ class Carousel extends SwipeControl {
 
     createAutoplay() {
         if (this.build('autoplay') && this.itemAmount > 1) {
-            let autoplay = this.carousel.getElementsByClassName('autoplay')[0];
+            let autoplay = this.slider.getElementsByClassName('autoplay')[0];
             if (!this.playing) {
                 autoplay.innerHTML = `<g>
                     <circle cx = "64.5" cy = "64.5" r = "58.417" />
@@ -229,15 +229,18 @@ class Carousel extends SwipeControl {
         if (this.itemAmount > 1) {
             if (this.build('arrows')) {
                 //  Handle arrow click
-                let arrows = [...this.carousel.getElementsByClassName('arrow')];
-                arrows.forEach((arrow, i) => arrow.addEventListener('click', () =>
-                    this.handleArrowPress(i)))
+                let arrows = [...this.slider.getElementsByClassName('arrow')];
+                arrows.forEach((arrow, i) => arrow.addEventListener('click', () => {
+                    this.element.style.transition = 'left 0.2s';
+                    this.handleArrowPress(i);
+                }));
             }
 
             if (this.build('bubbles')) {
                 //  Handle bubble click
                 for (let i = 0; i < this.bubbles.length; i++) {
                     this.bubbles[i].addEventListener("click", () => {
+                        this.element.style.transition = 'left 0.2s';
                         this.currentItem = i;
                         this.handleBubblePress();
                         this.currentActiveBubble();
@@ -245,8 +248,9 @@ class Carousel extends SwipeControl {
                 }
             }
 
+            //  Initiate autoplay
             if (this.build('autoplay')) {
-                let autoplay = this.carousel.getElementsByClassName('autoplay')[0];
+                let autoplay = this.slider.getElementsByClassName('autoplay')[0];
                 autoplay.addEventListener('click', () => this.handleAutoplay());
             }
 
@@ -254,17 +258,15 @@ class Carousel extends SwipeControl {
     }
 
     //*                                  Control Handlers
-    // Behavior of the bubble controls
+    //  Behavior of the bubble controls
     handleBubblePress() {
-        this.element.style.transition = 'left 0.2s';
         this.element.style.left = -100 * this.currentItem + "%";
         this.setCurrentItem();
         this.pause();
     }
 
-    // Behavior of the arrow controls
+    //  Behavior of the arrow controls
     handleArrowPress(index) {
-        this.element.style.transition = 'left 0.2s';
         if (index === 0) {
             this.previous();
             this.pause();
@@ -274,7 +276,7 @@ class Carousel extends SwipeControl {
         }
     }
 
-    // Handles the autoplay feature
+    //  Handles the autoplay feature
     handleAutoplay() {
         if (this.build('autoplay')) {
             if (!this.playing) {
@@ -291,7 +293,6 @@ class Carousel extends SwipeControl {
             this.element.style.transition = 'left 0.6s';
             if (this.currentPercent !== this.lastItem) {
                 this.next();
-                this.debugSwiper();
             } else if (this.currentPercent === this.lastItem) {
                 this.loopItems();
             }
@@ -311,38 +312,43 @@ class Carousel extends SwipeControl {
         }
     }
 
-    // Pause autoplayer if moving (overwrite of super.move())
+    // Alter behavior of move to pause the auto-player
     move(event) {
-        event.preventDefault();
-        if (event.changedTouches[0].identifier === 0) {             //  Do not handle any more than the first touch
-            this.handleMovement(event);
-            this.pause();
-        }
+        super.move(event);
+        this.pause();
     }
 
-    // Clones the first image to the end and manually increments to one more than the last item
-    // Switches with no transition to the actual first image and removes the clone.
     loopItems() {
+        // Clone and append node
         const clone = this.element.getElementsByTagName('img')[0].cloneNode(false);
         this.element.append(clone);
+
+        // Manually go to next slide
         this.element.style.left = this.currentPercent - 100 + '%';
+
+        // Set currentItem and bubble to first image
         this.currentItem = 0;
         this.currentActiveBubble();
+
+        // Sync transition time
         setTimeout(() => {
+            // Switch to first image discretely
             this.element.style.transition = 'none';
             this.element.style.left = 0 + '%';
+
+            // Set currentItem & currentPercent
             this.setCurrentItem();
+
+            // Remove clone
             this.element.removeChild(this.element.lastChild)
-        }, 550);
+        }, 600);
     }
 
 
     //*                                 Helper Methods
     // Handles setting this.currentItem, this.currentPercent, and invokes currentActiveBubble
     setCurrentItem() {
-        this.currentItem =
-            parseInt(this.element.style.left.replace(/\D/g, '')) / 100;
-        this.currentPercent = -(this.currentItem * 100);
+        super.setCurrentItem();
         this.currentActiveBubble();
     }
 
@@ -367,7 +373,7 @@ class Carousel extends SwipeControl {
     }
 }
 
-let first = new Carousel('first', {
+let first = new slider('first', {
     bubbles: true,
     arrows: false,
     swiping: false,
@@ -378,7 +384,7 @@ let first = new Carousel('first', {
     autoplaySpeed: 2500
 });
 
-let second = new Carousel('second', {
+let second = new slider('second', {
     bubbles: false,
     arrows: true,
     swiping: false,
