@@ -142,7 +142,8 @@ class SwipeControl {
 //?             Carousel
 //TODO      Base Functionality
 //*     - Start mouse dragging controls
-//*     - Allow for custom width/height (I might use SCSS for this)
+//*     - Create a 'count' (e.g. slide 2/6) in top right
+//*     - All controls should loop forward/backwards
 class Carousel extends SwipeControl {
     constructor(id, options = {}) {
         super()
@@ -252,7 +253,7 @@ class Carousel extends SwipeControl {
         }
     }
 
-    //*                                  Controls
+    //*                                  Control Handlers
     // Behavior of the bubble controls
     handleBubblePress() {
         this.element.style.transition = 'left 0.1s';
@@ -285,11 +286,11 @@ class Carousel extends SwipeControl {
         }
     }
 
-    //*                     Play Controls
+    //*                                 Autoplay Controls
     play() {
         this.playing = setInterval(() => {
             if (this.currentPercent !== this.lastItem) {
-                this.element.style.transition = 'left 0.8s';
+                this.element.style.transition = 'left 0.6s';
                 this.next();
                 this.debugSwiper();
             } else if (this.currentPercent === this.lastItem) {
@@ -324,7 +325,7 @@ class Carousel extends SwipeControl {
     handleLoopedItems() {
         const clone = this.element.getElementsByTagName('img')[0].cloneNode(false);
         this.element.append(clone);
-        this.element.style.transition = 'left 0.8s';
+        this.element.style.transition = 'left 0.6s';
         this.element.style.left = this.currentPercent - 100 + '%';
         this.currentItem = 0;
         this.currentActiveBubble();
@@ -333,7 +334,7 @@ class Carousel extends SwipeControl {
             this.element.style.left = 0 + '%';
             this.setCurrentItem();
             this.element.removeChild(this.element.lastChild)
-        }, 800);
+        }, 600);
     }
 
 
@@ -375,7 +376,7 @@ let first = new Carousel('first', {
     count: false,
     autoplay: false,
     autoplayOnload: false,
-    autoplaySpeed: 3000
+    autoplaySpeed: 2500
 });
 
 let second = new Carousel('second', {
@@ -386,5 +387,5 @@ let second = new Carousel('second', {
     count: false,
     autoplay: true,
     autoplayOnload: false,
-    autoplaySpeed: 3000
+    autoplaySpeed: 2500
 });
