@@ -143,7 +143,6 @@ class SwipeControl {
 //TODO      Base Functionality
 //*     - Start mouse dragging controls
 //*     - Allow for custom width/height (I might use SCSS for this)
-//*     - Create an optional 'auto-play' start/stop feature (timeIntervals)
 class Carousel extends SwipeControl {
     constructor(id, options = {}) {
         super()
@@ -259,6 +258,7 @@ class Carousel extends SwipeControl {
         this.element.style.transition = 'left 0.1s';
         this.element.style.left = -100 * this.currentItem + "%";
         this.setCurrentItem();
+        this.pause();
     }
 
     // Behavior of the arrow controls
@@ -266,8 +266,10 @@ class Carousel extends SwipeControl {
         this.element.style.transition = 'left 0.1s';
         if (index === 0) {
             this.previous();
+            this.pause();
         } else {
             this.next();
+            this.pause();
         }
     }
 
@@ -279,12 +281,11 @@ class Carousel extends SwipeControl {
                 this.createAutoplay();
             } else {
                 this.pause();
-                this.playing = false;
-                this.createAutoplay();
             }
         }
     }
 
+    //*                     Play Controls
     play() {
         this.playing = setInterval(() => {
             if (this.currentPercent !== this.lastItem) {
@@ -298,7 +299,24 @@ class Carousel extends SwipeControl {
     }
 
     pause() {
-        clearInterval(this.playing);
+        if (this.build('autoplay')) {
+            try {
+                clearInterval(this.playing);
+                this.playing = false;
+                this.createAutoplay();
+            } catch (error) {
+                console.log(error)
+            }
+        }
+    }
+
+    // Pause autoplayer if moving (overwrite of super.move())
+    move(event) {
+        event.preventDefault();
+        if (event.changedTouches[0].identifier === 0) {             //  Do not handle any more than the first touch
+            this.handleMovement(event);
+            this.pause();
+        }
     }
 
     // Clones the first image to the end and manually increments to one more than the last item
@@ -355,9 +373,9 @@ let first = new Carousel('first', {
     swiping: false,
     dragging: false,
     count: false,
-    autoplay: true,
+    autoplay: false,
     autoplayOnload: false,
-    autoplaySpeed: 2000
+    autoplaySpeed: 3000
 });
 
 let second = new Carousel('second', {
@@ -368,5 +386,5 @@ let second = new Carousel('second', {
     count: false,
     autoplay: true,
     autoplayOnload: false,
-    autoplaySpeed: 1000
+    autoplaySpeed: 3000
 });
