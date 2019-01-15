@@ -165,7 +165,6 @@ class Carousel extends SwipeControl {
 
         // Autoplay settings
         this.playing = this.build('autoplayOnload') ? this.handleAutoplay() : false;
-        this.reverse = false;
 
         //  Init
         this.createCarousel();
@@ -207,11 +206,21 @@ class Carousel extends SwipeControl {
 
     createAutoplay() {
         if (this.build('autoplay') && this.itemAmount > 1) {
-            let autoplay = this.carousel.getElementsByClassName('play')[0];
-            autoplay.innerHTML = `<g>
-                <circle cx = "64.5" cy = "64.5" r = "58.417" />
+            let autoplay = this.carousel.getElementsByClassName('autoplay')[0];
+            if (!this.playing) {
+                autoplay.innerHTML = `<g>
+                    <circle cx = "64.5" cy = "64.5" r = "58.417" />
                     <path transform="matrix(.68898 -.63178 .63178 .68898 -17.173 45.244)" d="m79.202 100.52-68.488-15.162 47.375-51.732 10.557 33.447z" />
-                        </g >`
+                    </g >`
+            } else {
+                autoplay.innerHTML = ` <g>
+                    <circle cx="64.5" cy="64.5" r="58.417"/>
+                    <g transform="matrix(.93515 0 0 1 6.7155 -.10065)">
+                    <path d="m45 95h9.9833v-60h-9.9833z"/>
+                    <path d="m70 95h9.9833v-60h-9.9833z"/>
+                    </g>
+                    </g>`
+            }
         }
     }
 
@@ -237,7 +246,7 @@ class Carousel extends SwipeControl {
             }
 
             if (this.build('autoplay')) {
-                let autoplay = this.carousel.getElementsByClassName('play')[0];
+                let autoplay = this.carousel.getElementsByClassName('autoplay')[0];
                 autoplay.addEventListener('click', () => this.handleAutoplay());
             }
 
@@ -264,31 +273,45 @@ class Carousel extends SwipeControl {
 
     // Handles the autoplay feature
     handleAutoplay() {
-        this.play();
+        if (!this.playing) {
+            this.play();
+            this.createAutoplay();
+        } else {
+            this.pause();
+            this.playing = false;
+            this.createAutoplay();
+        }
     }
 
     play() {
-        setInterval(() => {
-            this.element.style.transition = 'left 0.6s';
-            this.next();
-            this.debugSwiper();
-            if (this.currentPercent === this.lastItem) {
-                clearInterval();
-                this.rewind();
+        this.playing = setInterval(() => {
+            if (this.currentPercent !== this.lastItem) {
+                this.element.style.transition = 'left 0.8s';
+                this.next();
+                this.debugSwiper();
+            } else if (this.currentPercent === this.lastItem) {
+                this.handleLoopedItems();
             }
         }, this.options.autoplaySpeed);
     }
 
-    rewind() {
-        setInterval(() => {
-            this.element.style.transition = 'left 0.6s';
-            this.previous();
-            this.debugSwiper();
-            if (this.currentPercent === 0) {
-                clearInterval();
-                this.play();
-            }
-        }, this.options.autoplaySpeed);
+    pause() {
+        clearInterval(this.playing);
+    }
+
+    handleLoopedItems() {
+        const clone = this.element.getElementsByTagName('img')[0].cloneNode(false);
+        this.element.append(clone);
+        this.element.style.transition = 'left 0.8s';
+        this.element.style.left = this.currentPercent - 100 + '%';
+        this.currentItem = 0;
+        this.currentActiveBubble();
+        setTimeout(() => {
+            this.element.style.transition = 'none';
+            this.element.style.left = 0 + '%';
+            this.setCurrentItem();
+            this.element.removeChild(this.element.lastChild)
+        }, 800);
     }
 
 
@@ -328,8 +351,8 @@ let first = new Carousel('first', {
     swiping: false,
     dragging: false,
     count: false,
-    autoplay: false,
-    startOnload: false,
+    autoplay: true,
+    startOnload: true,
     autoplaySpeed: 2000
 });
 
@@ -339,7 +362,7 @@ let second = new Carousel('second', {
     swiping: false,
     dragging: false,
     count: false,
-    autoplay: false,
+    autoplay: true,
     autoplayOnload: false,
-    autoplaySpeed: 2000
+    autoplaySpeed: 1000
 });
