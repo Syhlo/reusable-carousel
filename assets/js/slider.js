@@ -1,139 +1,135 @@
-//?             SwipeControl
+//?             TouchHandler
 //TODO      Base Functionality
 //*     - Add .throttle and .debounce when applicable
 //*         - throttle the movement
-//?  Goal: make SwipeControl reusable for similar assets
-class SwipeControl {
+//?  Goal: make TouchHandler reusable for similar assets
+class TouchHandler {
     constructor() {
-        this.element;                                               //  Element to listen on
         this.initial;                                               //  Initial touch position
-        this.difference;                                            //  Difference between initial and new position
         this.threshold = 5;                                         //  % of item before triggering next slide
-        this.currentItem;                                           //  Current item
-        this.currentPercent = -0;
-        this.lastItem;                                              //  Last item
+        this.currentItem = 0;                                           //  Current item
+        this.currentPercent = -0;                                   //  Percentage based currentItem
+        this.lastItem;
     }
 
     swipeEvents() {
-        this.element.addEventListener('touchstart', (event) => this.start(event), { passive: false });
-        this.element.addEventListener('touchmove', (event) => this.move(event), { passive: false });
-        this.element.addEventListener('touchend', (event) => this.end(event), { passive: false });
+        this.element.addEventListener('touchstart', (event) => this.touchStart(event), { passive: false });
+        this.element.addEventListener('touchmove', (event) => this.touchMove(event), { passive: false });
+        this.element.addEventListener('touchend', (event) => this.touchEnd(event), { passive: false });
         this.element.addEventListener('transitionend', () => this.element.style.removeProperty('transition'));
     }
 
     //*                                  Event Handlers
-    start(event) {
+    touchStart(event) {
         event.preventDefault();
-        if (event.changedTouches[0].identifier === 0) {             //  Do not handle any more than the first touch
+        if (this.firstTouch(event)) {                               //  Prevents multitouch interaction
             this.initial = event.touches[0].clientX / 10;           //  Initial touch position
-            this.currentPercent = -(this.currentItem * 100)         //  Current item in percentage
+            this.currentPercent = -(this.currentItem * 100)         //  Percentage based currentItem
         }
     }
 
-    move(event) {
+    touchMove(event) {
         event.preventDefault();
-        if (event.changedTouches[0].identifier === 0) {             //  Do not handle any more than the first touch
-            this.handleMovement(event);
+        if (this.firstTouch(event)) {
+            this.handleMove(event);
         }
     }
 
-    end(event) {
+    touchEnd(event) {
         event.preventDefault();
-        if (event.changedTouches[0].identifier === 0) {             //  Do not handle any more than the first touch
-            let newPos = (event.changedTouches[0].clientX / 10)     //  New touch position
-            this.difference = this.initial - newPos;                //  Difference between initial and new position
-            this.element.style.transition = 'left 0.1s'             //  Transition effect for movement
-
-            if (this.difference > 0) {
-                this.swipedRight();
-            } else if (this.difference < 0) {
-                this.swipedLeft();
-            }
+        if (this.firstTouch(event)) {
+            const newPos = (event.changedTouches[0].clientX / 10)   //  New touch position
+            const moved = this.initial - newPos;                    //  Difference between initial and new position
+            moved >= 0 ? this.swipedRight(moved) : this.swipedLeft(moved);
         }
-        // this.debugSwiper(event)
+        this.debug(event);
     }
 
     //*                                  Controls
-    handleMovement(event) {
+    handleMove(event) {
         const touch = event.touches[0].clientX / 10;                //  Current touch position
-        let moveItem = (this.initial - touch) / 10;                 //  Speed of item movement
-        let movable = moveItem < 2.5 && moveItem > -2.5;            //  Movable threshold
-
-
-        //  First item:
-        if (!this.currentItem && moveItem > 0 && movable) {
-            this.element.style.left = -moveItem + '%';
-        }
-
-        //  Subsequent item(s):
-        else if (this.currentItem && movable) {
-            //  Not on last item
-            if (this.currentPercent !== this.lastItem) {
-                this.element.style.left = this.currentPercent - moveItem + '%';
-            }
-            // On last item
-            else if (this.currentPercent === this.lastItem && moveItem < 0) {
-                this.element.style.left = this.currentPercent - moveItem + '%';
-            }
+        let move = (this.initial - touch) / 10;
+        switch (this.allowed(move)) {
+            case 0:
+                this.moveSlide(move);
+            case 1:
+                if (!this.lastItem) { this.moveSlide(move); }
+                if (move < 0) { this.moveSlide(move); }
         }
     }
 
-    swipedRight() {
-        // First item:
-        if (this.difference > this.threshold && this.currentPercent !== this.lastItem) {
+    swipedRight(moved) {
+        this.element.style.transition = 'left 0.2s'
+        if (moved > this.threshold) {
             this.next();
-        } else if (this.threshold > this.difference) {
+        } else {
             this.stay();
         }
     }
 
-    swipedLeft() {
-        // Not first item:
-        if (-this.threshold > this.difference && this.currentItem !== 0) {
+    swipedLeft(moved) {
+        this.element.style.transition = 'left 0.2s'
+        if (-this.threshold > moved) {
             this.previous();
-        } else if (-this.threshold < this.difference) {
+        } else {
             this.stay();
         }
     }
 
-    next() {
-        // First item:
-        if (this.currentPercent !== this.lastItem) {
+    //*                                 Movement
+
+    next(bypass) {
+        if (!this.lastItem || bypass) {
             this.element.style.left = this.currentPercent - 100 + '%';
-            this.setCurrentItem();
+            this.setCurrents();
         }
     }
 
-    previous() {
-        if (this.currentItem !== -0) {
+    previous(bypass) {
+        if (this.currentItem || bypass) {
             this.element.style.left = this.currentPercent + 100 + '%';
-            this.setCurrentItem();
+            this.setCurrents();
         }
     }
 
     stay() {
         this.element.style.left = this.currentPercent + '%';
-        this.setCurrentItem();
+        this.setCurrents();
+    }
+
+    moveSlide(move) {
+        this.element.style.left = this.currentPercent - move + '%';
     }
 
     //*                                  Helpers
-    setCurrentItem() {
+    firstTouch(event) {
+        return event.changedTouches[0].identifier === 0
+    }
+
+    allowed(move) {
+        let movable = move < 2.5 && move > -2.5;                    //  Movable threshold
+        if (this.currentItem === 0 & move > 0 && movable) {
+            return 0;
+        } else if (this.currentItem && movable) {
+            return 1;
+        }
+    }
+
+    setCurrents() {
         this.currentItem =
             parseInt(this.element.style.left.replace(/\D/g, '')) / 100;
         this.currentPercent = -(this.currentItem * 100);
     }
 
-    debugSwiper(event) {
+    debug(event) {
         var now = new Date()
         console.log('%cDebugging Values', 'font-weight: bold')
         console.log(event)
-        // 'initial: ' + this.initial + '\n' +
-        // 'difference: ' + this.difference + '\n' +
-        // 'newPos: ' + (event.changedTouches[0].clientX / 10) + '\n' +
         console.log(
             'currentItem: ' + this.currentItem + '\n' +
             'lastItem: ' + this.lastItem + '\n' +
-            'left: ' + this.element.style.left + '\n')
+            'currentPercent ' + this.currentPercent + '\n' +
+            'left: ' + this.element.style.left)
         console.log(' ')
     }
 
@@ -144,8 +140,8 @@ class SwipeControl {
 //*     - Start mouse dragging controls
 //*     - Create a 'count' (e.g. slide 2/6) in top right
 //*     - All controls should loop forward/backwards
-class Slider extends SwipeControl {
-    constructor(id, options = {}) {
+class Slider extends TouchHandler {
+    constructor(id, settings = {}) {
         super()
         // Elements
         this.slider =
@@ -155,13 +151,12 @@ class Slider extends SwipeControl {
         this.imageSelector =
             this.slider.getElementsByClassName('image-selector')[0];
         this.bubbles = [];
+        this.items =
+            this.element.getElementsByTagName('img');
 
         // Slide information
-        this.itemAmount =
-            this.element.getElementsByTagName('img').length;
-        this.currentItem = 0;
-        this.lastItem = -((this.itemAmount - 1) * 100);
-        this.options = options;
+        this.lastItem = this.currentPercent === -((this.items.length - 1) * 100);
+        this.settings = settings;
 
         // Autoplay settings
         this.playing = this.build('autoplayOnload') ? false : true;
@@ -172,17 +167,19 @@ class Slider extends SwipeControl {
 
     //*                                  Slider Creation
     createslider() {
-        this.createBubbles();
-        this.currentActiveBubble();
-        this.createArrows();
-        this.handleAutoplay();
-        this.swipeEvents();
-        this.buildControls();
+        if (this.items.length > 1) {
+            this.createBubbles();
+            this.currentActiveBubble();
+            this.createArrows();
+            this.handleAutoplay();
+            this.swipeEvents();
+            this.buildControls();
+        }
     }
 
     createBubbles() {
-        if (this.build('bubbles') && this.itemAmount > 1) {
-            for (let i = 0; i < this.itemAmount; i++) {
+        if (this.build('bubbles')) {
+            for (let i = 0; i < this.items.length; i++) {
                 let bubble = document.createElement('span');
                 bubble.className = 'bubble';
                 let wrapper = document.createElement('span');
@@ -195,7 +192,7 @@ class Slider extends SwipeControl {
     }
 
     createArrows() {
-        if (this.build('arrows') && this.itemAmount > 1) {
+        if (this.build('arrows')) {
             let arrows = [...this.slider.querySelectorAll('.is-slider > .arrow')];
             arrows.forEach((arrow) => {
                 arrow.innerHTML =
@@ -205,11 +202,11 @@ class Slider extends SwipeControl {
     }
 
     createAutoplay() {
-        if (this.build('autoplay') && this.itemAmount > 1) {
+        if (this.build('autoplay')) {
             let autoplay = this.slider.getElementsByClassName('autoplay')[0];
             if (!this.playing) {
                 autoplay.innerHTML = `<g>
-                    <circle cx = "64.5" cy = "64.5" r = "58.417" />
+                    <circle cx="64.5" cy = "64.5" r = "58.417" />
                     <path transform="matrix(.68898 -.63178 .63178 .68898 -17.173 45.244)" d="m79.202 100.52-68.488-15.162 47.375-51.732 10.557 33.447z" />
                     </g >`
             } else {
@@ -224,48 +221,41 @@ class Slider extends SwipeControl {
         }
     }
 
-    // Sets up the controls
+    //*                                  Listeners
     buildControls() {
-        if (this.itemAmount > 1) {
-            if (this.build('arrows')) {
-                //  Handle arrow click
-                let arrows = [...this.slider.getElementsByClassName('arrow')];
-                arrows.forEach((arrow, i) => arrow.addEventListener('click', () => {
-                    this.element.style.transition = 'left 0.2s';
-                    this.handleArrowPress(i);
-                }));
-            }
-
-            if (this.build('bubbles')) {
-                //  Handle bubble click
-                for (let i = 0; i < this.bubbles.length; i++) {
-                    this.bubbles[i].addEventListener("click", () => {
-                        this.element.style.transition = 'left 0.2s';
-                        this.currentItem = i;
-                        this.handleBubblePress();
-                        this.currentActiveBubble();
-                    });
-                }
-            }
-
-            //  Initiate autoplay
-            if (this.build('autoplay')) {
-                let autoplay = this.slider.getElementsByClassName('autoplay')[0];
-                autoplay.addEventListener('click', () => this.handleAutoplay());
-            }
-
+        if (this.build('arrows')) {
+            let arrows = [...this.slider.getElementsByClassName('arrow')];
+            arrows.forEach((arrow, i) => arrow.addEventListener('click', () => {
+                this.element.style.transition = 'left 0.2s';
+                this.handleArrowPress(i);
+            }));
         }
+
+        if (this.build('bubbles')) {
+            for (let i = 0; i < this.bubbles.length; i++) {
+                this.bubbles[i].addEventListener("click", () => {
+                    this.element.style.transition = 'left 0.2s';
+                    this.currentItem = i;
+                    this.handleBubblePress();
+                    this.currentActiveBubble();
+                });
+            }
+        }
+
+        if (this.build('autoplay')) {
+            let autoplay = this.slider.getElementsByClassName('autoplay')[0];
+            autoplay.addEventListener('click', () => this.handleAutoplay());
+        }
+
     }
 
     //*                                  Control Handlers
-    //  Behavior of the bubble controls
     handleBubblePress() {
         this.element.style.left = -100 * this.currentItem + "%";
-        this.setCurrentItem();
+        this.setCurrents();
         this.pause();
     }
 
-    //  Behavior of the arrow controls
     handleArrowPress(index) {
         if (index === 0) {
             this.previous();
@@ -276,7 +266,6 @@ class Slider extends SwipeControl {
         }
     }
 
-    //  Handles the autoplay feature
     handleAutoplay() {
         if (this.build('autoplay')) {
             if (!this.playing) {
@@ -290,41 +279,27 @@ class Slider extends SwipeControl {
     //*                                 Autoplay Controls
     play() {
         this.playing = setInterval(() => {
-            this.element.style.transition = 'left 0.6s';
-            if (this.currentPercent !== this.lastItem) {
-                this.next();
-            } else if (this.currentPercent === this.lastItem) {
-                this.loopItems();
-            }
-        }, this.options.autoplaySpeed);
+            this.element.style.transition = 'left 0.4s';
+            !this.lastItem ? this.next() : this.loopItems();
+        }, this.settings.autoplaySpeed);
         this.createAutoplay();
     }
 
     pause() {
         if (this.build('autoplay')) {
-            try {
-                clearInterval(this.playing);
-                this.playing = false;
-                this.createAutoplay();
-            } catch (error) {
-                console.log(error)
-            }
+            clearInterval(this.playing);
+            this.playing = false;
+            this.createAutoplay();
         }
-    }
-
-    // Alter behavior of move to pause the auto-player
-    move(event) {
-        super.move(event);
-        this.pause();
     }
 
     loopItems() {
         // Clone and append node
-        const clone = this.element.getElementsByTagName('img')[0].cloneNode(false);
+        const clone = this.items[0].cloneNode(false);
         this.element.append(clone);
 
         // Manually go to next slide
-        this.element.style.left = this.currentPercent - 100 + '%';
+        this.next(true);
 
         // Set currentItem and bubble to first image
         this.currentItem = 0;
@@ -337,60 +312,70 @@ class Slider extends SwipeControl {
             this.element.style.left = 0 + '%';
 
             // Set currentItem & currentPercent
-            this.setCurrentItem();
+            this.setCurrents();
 
             // Remove clone
             this.element.removeChild(this.element.lastChild)
-        }, 600);
+        }, 400);
     }
 
+    move(event) {
+        super.move(event);
+        this.pause();
+    }
 
     //*                                 Helper Methods
-    // Handles setting this.currentItem, this.currentPercent, and invokes currentActiveBubble
-    setCurrentItem() {
-        super.setCurrentItem();
+    setCurrents() {
+        super.setCurrents();
         this.currentActiveBubble();
+        this.lastItem = this.currentPercent === -((this.items.length - 1) * 100);
     }
 
-    // Sets the current active bubble depending on this.currentItem
     currentActiveBubble() {
         this.bubbles.forEach((bubble, index) => {
             if (index === this.currentItem) {
                 bubble.children[0].classList.add("bubble-active");
             } else {
                 bubble.children[0].classList.remove("bubble-active");
-                bubble.children[0].classList.remove("bubble:hover");
             }
         });
     }
 
-    // Whether or not to build an option based on given value
-    // Checks for valid option, valid option value, and defaults to false
-    build(option) {
-        return Object.keys(this.options).includes(option) ?
-            typeof this.options[option] === 'boolean' ? this.options[option] : false
+    build(setting) {
+        return Object.keys(this.settings).includes(setting) ?
+            typeof this.settings[setting] === 'boolean' ? this.settings[setting] : false
             : false
     }
 }
 
 let first = new Slider('first', {
+    // Controls
     bubbles: true,
     arrows: false,
     swiping: false,
     dragging: false,
-    count: false,
-    autoplay: true,
+    autoplay: false,
+
+    // Autoplay settings
     autoplayOnload: false,
-    autoplaySpeed: 2500
+    autoplaySpeed: 2200,
+
+    // Display numbers, e.g. slide 2/5
+    numbers: false
 });
 
 let second = new Slider('second', {
+    // Controls
     bubbles: false,
     arrows: true,
     swiping: false,
     dragging: false,
-    count: false,
     autoplay: true,
+
+    // Autoplay settings
     autoplayOnload: false,
-    autoplaySpeed: 2500
+    autoplaySpeed: 2200,
+
+    // Display numbers, e.g. slide 2/5
+    numbers: false
 });
