@@ -171,6 +171,7 @@ class Carousel extends SwipeControl {
         this.createBubbles();
         this.currentActiveBubble();
         this.createArrows();
+        this.createAutoplay();
         this.swipeEvents();
         this.buildControls();
     }
@@ -199,8 +200,14 @@ class Carousel extends SwipeControl {
         }
     }
 
-    handleAutoplay() {
-
+    createAutoplay() {
+        if (this.build('autoplay') && this.itemAmount > 1) {
+            let autoplay = this.carousel.querySelector('.play');
+            autoplay.innerHTML = `<g>
+                <circle cx = "64.5" cy = "64.5" r = "58.417" />
+                    <path transform="matrix(.68898 -.63178 .63178 .68898 -17.173 45.244)" d="m79.202 100.52-68.488-15.162 47.375-51.732 10.557 33.447z" />
+                        </g >`
+        }
     }
 
     buildControls() {
@@ -273,6 +280,7 @@ let first = new Carousel('first', {
     dragging: false,
     count: false,
     autoplay: false,
+    startOnload: false,
     autoplaySpeed: 2000
 });
 
@@ -282,6 +290,7 @@ let second = new Carousel('second', {
     swiping: false,
     dragging: false,
     count: false,
-    autoplay: false,
+    autoplay: true,
+    startOnload: false,
     autoplaySpeed: 2000
 });
