@@ -256,7 +256,7 @@ class Carousel extends SwipeControl {
     //*                                  Control Handlers
     // Behavior of the bubble controls
     handleBubblePress() {
-        this.element.style.transition = 'left 0.1s';
+        this.element.style.transition = 'left 0.2s';
         this.element.style.left = -100 * this.currentItem + "%";
         this.setCurrentItem();
         this.pause();
@@ -264,7 +264,7 @@ class Carousel extends SwipeControl {
 
     // Behavior of the arrow controls
     handleArrowPress(index) {
-        this.element.style.transition = 'left 0.1s';
+        this.element.style.transition = 'left 0.2s';
         if (index === 0) {
             this.previous();
             this.pause();
@@ -279,7 +279,6 @@ class Carousel extends SwipeControl {
         if (this.build('autoplay')) {
             if (!this.playing) {
                 this.play();
-                this.createAutoplay();
             } else {
                 this.pause();
             }
@@ -289,14 +288,15 @@ class Carousel extends SwipeControl {
     //*                                 Autoplay Controls
     play() {
         this.playing = setInterval(() => {
+            this.element.style.transition = 'left 0.6s';
             if (this.currentPercent !== this.lastItem) {
-                this.element.style.transition = 'left 0.6s';
                 this.next();
                 this.debugSwiper();
             } else if (this.currentPercent === this.lastItem) {
-                this.handleLoopedItems();
+                this.loopItems();
             }
         }, this.options.autoplaySpeed);
+        this.createAutoplay();
     }
 
     pause() {
@@ -322,10 +322,9 @@ class Carousel extends SwipeControl {
 
     // Clones the first image to the end and manually increments to one more than the last item
     // Switches with no transition to the actual first image and removes the clone.
-    handleLoopedItems() {
+    loopItems() {
         const clone = this.element.getElementsByTagName('img')[0].cloneNode(false);
         this.element.append(clone);
-        this.element.style.transition = 'left 0.6s';
         this.element.style.left = this.currentPercent - 100 + '%';
         this.currentItem = 0;
         this.currentActiveBubble();
@@ -334,7 +333,7 @@ class Carousel extends SwipeControl {
             this.element.style.left = 0 + '%';
             this.setCurrentItem();
             this.element.removeChild(this.element.lastChild)
-        }, 600);
+        }, 550);
     }
 
 
@@ -374,7 +373,7 @@ let first = new Carousel('first', {
     swiping: false,
     dragging: false,
     count: false,
-    autoplay: false,
+    autoplay: true,
     autoplayOnload: false,
     autoplaySpeed: 2500
 });
