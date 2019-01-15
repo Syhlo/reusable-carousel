@@ -42,7 +42,7 @@ class SwipeControl {
         if (event.changedTouches[0].identifier === 0) {             //  Do not handle any more than the first touch
             let newPos = (event.changedTouches[0].clientX / 10)     //  New touch position
             this.difference = this.initial - newPos;                //  Difference between initial and new position
-            this.element.style.transition = 'left 0.1s'             //  Transition effect for movement
+            this.element.style.transition = 'left 200ms'             //  Transition effect for movement
 
             if (this.difference > 0) {
                 this.swipedRight();
@@ -288,12 +288,11 @@ class Carousel extends SwipeControl {
     //*                                 Autoplay Controls
     play() {
         this.playing = setInterval(() => {
-            this.element.style.transition = 'left 0.6s';
+            this.element.style.transition = 'left 600ms';
             if (this.currentPercent !== this.lastItem) {
                 this.next();
-                this.debugSwiper();
             } else if (this.currentPercent === this.lastItem) {
-                this.loopItems();
+                this.loopItems(600, 0);
             }
         }, this.options.autoplaySpeed);
         this.createAutoplay();
@@ -320,21 +319,78 @@ class Carousel extends SwipeControl {
         }
     }
 
+    //*                                 Looping Items
     // Clones the first image to the end and manually increments to one more than the last item
     // Switches with no transition to the actual first image and removes the clone.
-    loopItems() {
-        const clone = this.element.getElementsByTagName('img')[0].cloneNode(false);
+    loopItems(transitionTime, index) {
+        const clone =
+            this.element.getElementsByTagName('img')[index].cloneNode(false);
+        if (index === 0) {
+            this.loopNext(transitionTime, clone);
+        } else {
+            this.loopPrevious(transitionTime, clone);
+        }
+    }
+
+    loopNext(transitionTime, clone) {
+        this.element.style.transition = `left ${transitionTime}ms`;
+        // Cloning and moving to clone
         this.element.append(clone);
         this.element.style.left = this.currentPercent - 100 + '%';
+
+        // Set new currentItem and active bubble
         this.currentItem = 0;
         this.currentActiveBubble();
+
+        // Match animation time
         setTimeout(() => {
+            // Set to actual slide, remove clone
             this.element.style.transition = 'none';
             this.element.style.left = 0 + '%';
             this.setCurrentItem();
             this.element.removeChild(this.element.lastChild)
-        }, 550);
+        }, transitionTime);
     }
+
+    loopPrevious(transitionTime, clone) {
+        // Cloning and moving to clone
+        this.element.insertBefore(clone, this.element.firstChild.nextSibling);
+        // this.element.style.transition = 'none';
+        // this.element.style.left = -100 + '%';
+        // this.element.style.transition = 'left 600ms';
+        // this.element.style.left = 0 + '%';
+
+        // // Set new currentItem and active bubble
+        // this.currentItem = this.itemAmount - 1;
+        // this.currentActiveBubble();
+
+        // // Match animation time
+        // setTimeout(() => {
+        //     // Set to actual slide, remove clone
+        //     this.element.style.transition = 'none';
+        //     this.element.style.left = this.lastItem + '%';
+        //     this.setCurrentItem();
+        //     this.element.removeChild(this.element.firstChild.nextSibling)
+        // }, transitionTime);
+    }
+
+    // previous() {
+    //     this.element.style.transition = 'left 600ms';
+    //     if (this.currentItem === 0) {
+    //         this.loopItems(600, (this.itemAmount - 1));
+    //     } else {
+    //         super.previous();
+    //     }
+    // }
+
+    // next() {
+    //     this.element.style.transition = 'left 600ms';
+    //     if (this.currentItem === (this.itemAmount - 1)) {
+    //         this.loopItems(200, 0);
+    //     } else {
+    //         super.next();
+    //     }
+    // }
 
 
     //*                                 Helper Methods
@@ -367,24 +423,34 @@ class Carousel extends SwipeControl {
     }
 }
 
-let first = new Carousel('first', {
+let carousel = new Carousel('first', {
+    // Controls
     bubbles: true,
     arrows: false,
-    swiping: false,
-    dragging: false,
-    count: false,
-    autoplay: true,
+    swiping: true,
+    dragging: true,
+    autoplay: false,
+
+    // Autoplay settings
     autoplayOnload: false,
-    autoplaySpeed: 2500
+    autoplaySpeed: 2500,
+
+    // Display numbers, e.g. slide 2/5
+    numbers: true
 });
 
-let second = new Carousel('second', {
+new Carousel('second', {
+    // Controls
     bubbles: false,
     arrows: true,
-    swiping: false,
-    dragging: false,
-    count: false,
+    swiping: true,
+    dragging: true,
     autoplay: true,
+
+    // Autoplay settings
     autoplayOnload: false,
-    autoplaySpeed: 2500
+    autoplaySpeed: 2500,
+
+    // Display numbers, e.g. slide 2/5
+    numbers: true
 });
