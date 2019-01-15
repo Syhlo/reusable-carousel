@@ -42,10 +42,6 @@ new Carousel('first', {
     // Autoplay settings
     autoplayOnload: false,
     autoplaySpeed: 2500,
-
-    // Transition timings
-    transition: 200,
-    autoplayTransition: 600
 });
 ```
 ##### Steps:
