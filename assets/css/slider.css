@@ -1,8 +1,9 @@
 
 @import url('https://fonts.googleapis.com/css?family=Open+Sans');
-* {
+.is-carousel {
   font-family: 'Open Sans', sans-serif;
 }
+
 /* TODO:
     - Rewrite this in Sass
     - Set variables to easily customize it
@@ -51,6 +52,23 @@
   justify-content: center;
 }
 
+.count {
+  position: absolute;
+  z-index: 3;
+  bottom: 8%;
+  left: 6.5%;
+  transform: translateX(-50%);
+  font-size: 28px;
+  color: rgba(255,255,255,0.95);
+  text-shadow:
+   -1px -1px 0 #333,  
+    1px -1px 0 #333,
+    -1px 1px 0 #333,
+     1px 1px 0 #333;
+  text-align: center;
+  line-height: 32px;
+  opacity: 0.8;
+}
 
 /* Selection */
 .bubble {
@@ -208,12 +226,12 @@
   }
   
   .is-carousel {
-    height: 160px;
+    height: 170px;
     margin: -5%;
   }
   
   .inner img {
-    height: 160px;
+    height: 170px;
   }
   
   .image-selector {
@@ -231,8 +249,13 @@
   }
 
   .autoplay {
-    width: 28px;
-    height: 28px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .count {
+    font-size: 16px;
+    left: 5%;
   }
   
 }
