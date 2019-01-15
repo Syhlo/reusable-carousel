@@ -164,7 +164,7 @@ class Carousel extends SwipeControl {
         this.options = options;
 
         // Autoplay settings
-        this.playing = this.build('autoplayOnload') ? this.handleAutoplay() : false;
+        this.playing = this.build('autoplayOnload') ? false : true;
 
         //  Init
         this.createCarousel();
@@ -175,7 +175,7 @@ class Carousel extends SwipeControl {
         this.createBubbles();
         this.currentActiveBubble();
         this.createArrows();
-        this.createAutoplay();
+        this.handleAutoplay();
         this.swipeEvents();
         this.buildControls();
     }
@@ -273,13 +273,15 @@ class Carousel extends SwipeControl {
 
     // Handles the autoplay feature
     handleAutoplay() {
-        if (!this.playing) {
-            this.play();
-            this.createAutoplay();
-        } else {
-            this.pause();
-            this.playing = false;
-            this.createAutoplay();
+        if (this.build('autoplay')) {
+            if (!this.playing) {
+                this.play();
+                this.createAutoplay();
+            } else {
+                this.pause();
+                this.playing = false;
+                this.createAutoplay();
+            }
         }
     }
 
@@ -299,6 +301,8 @@ class Carousel extends SwipeControl {
         clearInterval(this.playing);
     }
 
+    // Clones the first image to the end and manually increments to one more than the last item
+    // Switches with no transition to the actual first image and removes the clone.
     handleLoopedItems() {
         const clone = this.element.getElementsByTagName('img')[0].cloneNode(false);
         this.element.append(clone);
@@ -352,7 +356,7 @@ let first = new Carousel('first', {
     dragging: false,
     count: false,
     autoplay: true,
-    startOnload: true,
+    autoplayOnload: false,
     autoplaySpeed: 2000
 });
 
