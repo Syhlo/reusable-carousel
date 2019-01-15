@@ -7,7 +7,7 @@
 /* Containers */
 .hero .box {
   margin: 3% auto;
-  width: 80%;
+  width: 65%;
   box-shadow: none;
   border-radius: 0;
 }
@@ -85,7 +85,7 @@
 
 .autoplay {
   position: absolute;
-  right: 5%;
+  right: 4.5%;
   bottom: 8%;
   z-index: 3;
   height: 52px;
