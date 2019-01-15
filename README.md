@@ -6,7 +6,9 @@ This repository contains my personal responsive slider asset. Currently it suppo
 
 [Demonstration](https://codepen.io/Syh/full/VqEMNd)
 
-Setting up a slider is as easy as using the following templates:
+Setting up a slider is as easy modifying the below templates and including slider.js and slider.css into your HTML file.
+
+## Templates
 
 #### HTML template
 ```html
