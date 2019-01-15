@@ -2,11 +2,11 @@
 
 ###### *Currently being developed.*
 
-This repository contains my personal responsive carousel asset. Currently it supports touch screen swiping, arrow controls, and bubble controls. It automatically adds the images in `.inner` to the carousel.
+This repository contains my personal responsive slider asset. Currently it supports touch screen swiping, arrow controls, and bubble controls. It automatically adds the images in `.inner` to the slider.
 
 [Demonstration](https://codepen.io/Syh/full/VqEMNd)
 
-Setting up a carousel is as easy as using the following templates:
+Setting up a slider is as easy as using the following templates:
 
 #### HTML template
 ```html
@@ -31,8 +31,9 @@ new Carousel('name', {
     arrows: true,
     swiping: true,
     dragging: true,
+    count: true,
     autoplay: true,
-    startOnload: true,
+    startOnload: false,
     autoplaySpeed: 2000
 });
 ```
