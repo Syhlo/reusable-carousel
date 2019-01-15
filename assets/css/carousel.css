@@ -55,7 +55,6 @@
   background-color: rgba(210,210,210,0.5);
   border: 1px solid #333;
   border-radius: 50%;
-  cursor: pointer;
 }
 
 .left-arrow {
@@ -78,11 +77,36 @@
   width: 42px;
   height: 42px;
   top: 50%;
-  fill-opacity:.5;
+  fill-opacity: .5;
   fill:#fff;
-  stroke-width:2.5;
+  stroke-width: 2.5;
   stroke:#333;
-  cursor: pointer;
+}
+
+.play {
+  position: absolute;
+  right: 5%;
+  bottom: 8%;
+  z-index: 3;
+  height: 38px;
+  width: 38px;
+}
+
+.play path {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.5;
+  stroke: #333;
+  fill: #333;
+  fill-opacity: .8;
+}
+
+.play circle {
+  stroke-miterlimit: 2.5;
+  stroke-width: 2.5;
+  stroke: #333; 
+  fill: #fff;
+  fill-opacity: .5;
 }
 
 
@@ -90,11 +114,17 @@
 @media (hover:hover) {
     .bubble:hover {
       background-color: rgba(255,255,255,0.75);
+      cursor: pointer;
     }
 
     .arrow:hover path {
-      fill: #fff;
       fill-opacity: .75;
+      cursor: pointer;
+    }
+    
+    .play:hover circle, .play:hover path {
+      fill-opacity: .75;
+      cursor: pointer;
     }
 }
 
@@ -192,6 +222,11 @@
     width: 32px;
     height: 32px;
     top: 42%;
+  }
+
+  .play {
+    width: 28px;
+    height: 28px;
   }
   
 }
