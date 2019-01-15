@@ -127,14 +127,13 @@ class SwipeControl {
         var now = new Date()
         console.log('%cDebugging Values', 'font-weight: bold')
         console.log(event)
+        // 'initial: ' + this.initial + '\n' +
+        // 'difference: ' + this.difference + '\n' +
+        // 'newPos: ' + (event.changedTouches[0].clientX / 10) + '\n' +
         console.log(
-            'initial: ' + this.initial + '\n' +
-            'difference: ' + this.difference + '\n' +
-            'newPos: ' + (event.changedTouches[0].clientX / 10) + '\n' +
             'currentItem: ' + this.currentItem + '\n' +
             'lastItem: ' + this.lastItem + '\n' +
-            'left: ' + this.element.style.left + '\n' +
-            'firstTouch: ' + (event.changedTouches[0].identifier === 0))
+            'left: ' + this.element.style.left + '\n')
         console.log(' ')
     }
 
@@ -148,6 +147,7 @@ class SwipeControl {
 class Carousel extends SwipeControl {
     constructor(id, options = {}) {
         super()
+        // Elements
         this.carousel =
             document.getElementById(id);
         this.element =
@@ -156,11 +156,16 @@ class Carousel extends SwipeControl {
             this.carousel.getElementsByClassName('image-selector')[0];
         this.bubbles = [];
 
+        // Slide information
         this.itemAmount =
             this.element.getElementsByTagName('img').length;
         this.currentItem = 0;
         this.lastItem = -((this.itemAmount - 1) * 100);
         this.options = options;
+
+        // Autoplay settings
+        this.playing = this.build('autoplayOnload') ? this.handleAutoplay() : false;
+        this.reverse = false;
 
         //  Init
         this.createCarousel();
@@ -202,7 +207,7 @@ class Carousel extends SwipeControl {
 
     createAutoplay() {
         if (this.build('autoplay') && this.itemAmount > 1) {
-            let autoplay = this.carousel.querySelector('.play');
+            let autoplay = this.carousel.getElementsByClassName('play')[0];
             autoplay.innerHTML = `<g>
                 <circle cx = "64.5" cy = "64.5" r = "58.417" />
                     <path transform="matrix(.68898 -.63178 .63178 .68898 -17.173 45.244)" d="m79.202 100.52-68.488-15.162 47.375-51.732 10.557 33.447z" />
@@ -210,33 +215,44 @@ class Carousel extends SwipeControl {
         }
     }
 
+    // Sets up the controls
     buildControls() {
         if (this.itemAmount > 1) {
-            //  Handle arrow click
-            let arrows = [...this.carousel.getElementsByClassName('arrow')];
-            arrows.forEach((arrow, i) => arrow.addEventListener('click', () =>
-                this.handleArrowPress(i)))
+            if (this.build('arrows')) {
+                //  Handle arrow click
+                let arrows = [...this.carousel.getElementsByClassName('arrow')];
+                arrows.forEach((arrow, i) => arrow.addEventListener('click', () =>
+                    this.handleArrowPress(i)))
+            }
 
+            if (this.build('bubbles')) {
+                //  Handle bubble click
+                for (let i = 0; i < this.bubbles.length; i++) {
+                    this.bubbles[i].addEventListener("click", () => {
+                        this.currentItem = i;
+                        this.handleBubblePress();
+                        this.currentActiveBubble();
+                    });
+                }
+            }
 
-            //  Handle bubble click
-            for (let i = 0; i < this.bubbles.length; i++) {
-                this.bubbles[i].addEventListener("click", () => {
-                    this.currentItem = i;
-                    this.handleBubblePress();
-                    this.currentActiveBubble();
-                });
+            if (this.build('autoplay')) {
+                let autoplay = this.carousel.getElementsByClassName('play')[0];
+                autoplay.addEventListener('click', () => this.handleAutoplay());
             }
 
         }
     }
 
     //*                                  Controls
+    // Behavior of the bubble controls
     handleBubblePress() {
         this.element.style.transition = 'left 0.1s';
         this.element.style.left = -100 * this.currentItem + "%";
         this.setCurrentItem();
     }
 
+    // Behavior of the arrow controls
     handleArrowPress(index) {
         this.element.style.transition = 'left 0.1s';
         if (index === 0) {
@@ -246,8 +262,38 @@ class Carousel extends SwipeControl {
         }
     }
 
+    // Handles the autoplay feature
+    handleAutoplay() {
+        this.play();
+    }
+
+    play() {
+        setInterval(() => {
+            this.element.style.transition = 'left 0.6s';
+            this.next();
+            this.debugSwiper();
+            if (this.currentPercent === this.lastItem) {
+                clearInterval();
+                this.rewind();
+            }
+        }, this.options.autoplaySpeed);
+    }
+
+    rewind() {
+        setInterval(() => {
+            this.element.style.transition = 'left 0.6s';
+            this.previous();
+            this.debugSwiper();
+            if (this.currentPercent === 0) {
+                clearInterval();
+                this.play();
+            }
+        }, this.options.autoplaySpeed);
+    }
+
 
     //*                                 Helper Methods
+    // Handles setting this.currentItem, this.currentPercent, and invokes currentActiveBubble
     setCurrentItem() {
         this.currentItem =
             parseInt(this.element.style.left.replace(/\D/g, '')) / 100;
@@ -255,6 +301,7 @@ class Carousel extends SwipeControl {
         this.currentActiveBubble();
     }
 
+    // Sets the current active bubble depending on this.currentItem
     currentActiveBubble() {
         this.bubbles.forEach((bubble, index) => {
             if (index === this.currentItem) {
@@ -266,6 +313,8 @@ class Carousel extends SwipeControl {
         });
     }
 
+    // Whether or not to build an option based on given value
+    // Checks for valid option, valid option value, and defaults to false
     build(option) {
         return Object.keys(this.options).includes(option) ?
             typeof this.options[option] === 'boolean' ? this.options[option] : false
@@ -290,7 +339,7 @@ let second = new Carousel('second', {
     swiping: false,
     dragging: false,
     count: false,
-    autoplay: true,
-    startOnload: false,
+    autoplay: false,
+    autoplayOnload: false,
     autoplaySpeed: 2000
 });
