@@ -31,13 +31,13 @@ Setting up a slider is as easy as modifying the below templates and including sl
 new Carousel('first', {
     // Controls
     bubbles: true,
-    arrows: false,
-    swiping: false,
-    dragging: false,
-    autoplay: false,
+    arrows: true,
+    swiping: true,
+    dragging: true,
+    autoplay: true,
 
     // Display numbers, e.g. slide 2/5
-    numbers: false,
+    numbers: true,
 
     // Autoplay settings
     autoplayOnload: false,
