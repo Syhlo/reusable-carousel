@@ -50,57 +50,27 @@ class TouchHandler {
         let movement = (this.initial - touch) / 10;
         switch (this.allowed(movement)) {
             case 0:
-                this.moveSlide(movement);
+                this.moveTo('move', 0, movement)
             case 1:
-                if (!this.lastItem) { this.moveSlide(movement); }
-                else if (movement < 0) { this.moveSlide(movement); }
+                if (!this.lastItem) { this.moveTo('move', 0, movement) }
+                else if (movement < 0) { this.moveTo('move', 0, movement) }
         }
     }
 
     swipedRight(movement) {
         if (-this.threshold > movement) {
-            this.previous();
+            this.moveTo('previous', 200);
         } else {
-            this.stay();
+            this.moveTo('stay', 200);
         }
     }
 
     swipedLeft(movement) {
         if (movement > this.threshold) {
-            this.next();
+            this.moveTo('next', 200);
         } else {
-            this.stay();
+            this.moveTo('stay', 200);
         }
-    }
-
-
-    //*                                 Movement
-
-    next(bypass) {
-        this.element.style.transition = `left 200ms`;
-        if (!this.lastItem || bypass) {
-            this.element.style.left = this.currentPercent - 100 + '%';
-            this.getCurrent();
-            return true
-        }
-    }
-
-    previous(bypass) {
-        this.element.style.transition = `left 200ms`;
-        if (this.currentItem || bypass) {
-            this.element.style.left = this.currentPercent + 100 + '%';
-            this.getCurrent();
-            return true
-        }
-    }
-
-    stay() {
-        this.element.style.left = this.currentPercent + '%';
-        this.getCurrent();
-    }
-
-    moveSlide(move) {
-        this.element.style.left = this.currentPercent - move + '%';
     }
 
     //*                                  Helpers
@@ -223,45 +193,30 @@ class Slider extends TouchHandler {
 
     //*                                  Listeners
     buildControls() {
-        if (this.build('arrows')) {
-            let arrows = [...this.slider.getElementsByClassName('arrow')];
-            arrows.forEach((arrow, i) => arrow.addEventListener('click', () => {
-                this.element.style.transition = 'left 0.2s';
-                this.handleArrowPress(i);
-            }));
+        let arrows = [...this.slider.getElementsByClassName('arrow')];
+        arrows.forEach((arrow, i) => arrow.addEventListener('click', () => {
+            this.handleArrowPress(i);
+        }));
+
+        for (let i = 0; i < this.bubbles.length; i++) {
+            this.bubbles[i].addEventListener("click", () => {
+                this.currentItem = i;
+                this.moveTo('bubble', 200);
+                this.currentActiveBubble();
+            });
         }
 
-        if (this.build('bubbles')) {
-            for (let i = 0; i < this.bubbles.length; i++) {
-                this.bubbles[i].addEventListener("click", () => {
-                    this.element.style.transition = 'left 0.2s';
-                    this.currentItem = i;
-                    this.handleBubblePress();
-                    this.currentActiveBubble();
-                });
-            }
-        }
-
-        if (this.build('autoplay')) {
-            let autoplay = this.slider.getElementsByClassName('autoplay')[0];
-            autoplay.addEventListener('click', () => this.handleAutoplay());
-        }
-
+        let autoplay = this.slider.getElementsByClassName('autoplay')[0];
+        autoplay.addEventListener('click', () => this.handleAutoplay());
     }
 
     //*                                  Control Handlers
-    handleBubblePress() {
-        this.element.style.left = -100 * this.currentItem + "%";
-        this.getCurrent();
-        this.pause();
-    }
-
     handleArrowPress(index) {
         if (index === 0) {
-            this.previous();
+            this.moveTo('previous', 200); // moveTo works
             this.pause();
         } else {
-            this.next();
+            this.moveTo('next', 200)
             this.pause();
         }
     }
@@ -279,8 +234,7 @@ class Slider extends TouchHandler {
     //*                                 Autoplay Controls
     play() {
         this.playing = setInterval(() => {
-            this.element.style.transition = 'left 0.6s';
-            !this.lastItem ? this.next() : this.loopItems(600, 1);
+            !this.lastItem ? this.moveTo('next', 600) : this.loopItems(600, 1);
         }, this.settings.autoplaySpeed);
         this.createAutoplay();
     }
@@ -305,63 +259,46 @@ class Slider extends TouchHandler {
         }
     }
 
-
     loopPrevious(transition, value) {
         this.element.append(
             this.items[0].cloneNode(false)
         );
-        this.discreteSwitch(value);
+        this.moveTo(value, 0)
         setTimeout(() => {
-            this.previous()
-        }, 10)
+            this.moveTo('previous', transition);
+        }, 10);
         setTimeout(() => {
             this.element.removeChild(this.element.lastChild);
             this.getCurrent();
-        }, transition)
+        }, transition);
     }
 
     loopNext(transition) {
         this.element.append(
             this.items[0].cloneNode(false)
         );
-        this.next(true);
+        this.moveTo('next', transition, true);
         this.setCurrent(0);
         setTimeout(() => {
-            this.discreteSwitch(0);
+            this.moveTo(0, 0);
             this.getCurrent();
             this.element.removeChild(this.element.lastChild);
-        }, transition)
-    }
-
-    //*                                 Overriding super functions
-    next(bypass) {
-        super.next(bypass) ? true :
-            this.loopItems(200, 1);
-    }
-
-    previous(bypass) {
-        // If super.previous runs, don't run loopvalue
-        super.previous(bypass) ? true :
-            this.loopItems(200, 0);
-    }
-
-    move(event) {
-        super.move(event);
-        this.pause();
+        }, transition);
     }
 
     //*                                 Slider movement
-
     moveTo(input, speed, condition) {
         this.element.style.transition = `left ${speed}ms`;
         let _current = () => { this.getCurrent(); }
         switch (input) {
             case 'next':
-                !this.lastItem || condition ? this._next() : this.loopItems(200, 1);
+                !this.lastItem || condition ? this._next(condition)
+                    : this.loopItems(200, 1);
                 _current();
                 break;
             case 'previous':
-                !this.currentItem || condition ? this._previous() : this.loopItems(200, 0);
+                this.currentItem || condition ? this._previous()
+                    : this.loopItems(200, 0);
                 _current();
                 break;
             case 'stay':
@@ -370,14 +307,16 @@ class Slider extends TouchHandler {
             case 'bubble':
                 this._bubble();
                 _current();
+                this.pause();
                 break;
             case 'move':
-                this._move(condition);
+                this._moveSlide(condition);
+                this.pause();
                 break;
             default:
-            // Handle integer input
+                this._index(input);
+                _current();
         }
-        this.pause();
     }
 
     _next() { this.element.style.left = `${this.currentPercent - 100}%`; }
@@ -395,10 +334,9 @@ class Slider extends TouchHandler {
         this.currentActiveBubble();
     }
 
-    discreteSwitch(value, callback) {
+    discreteSwitch(value) {
         this.setCurrent(value);
-        this.element.style.removeProperty('transition');
-        this.element.style.left = (value * 100) + '%';
+        this.moveTo(value, 0);
     }
 
     // Get current values
