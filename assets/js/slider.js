@@ -106,12 +106,12 @@ class TouchHandler {
 
 }
 
-//?             slider
+//?             Slider
 //TODO      Base Functionality
 //*     - Start mouse dragging controls
-//*     - Create a 'count' (e.g. slide 2/6) in top right
-//*     - All controls should loop forward/backwards [Mostly done]
-//*     - Arrow key support?
+//?     - Create a 'count' (e.g. slide 2/6) in top right
+//*     - Refactor looping to work out kinks
+//*     - Arrow key support
 class Slider extends TouchHandler {
     constructor(id, settings = {}) {
         super()
@@ -292,13 +292,13 @@ class Slider extends TouchHandler {
         let _current = () => { this.getCurrent(); }
         switch (input) {
             case 'next':
-                !this.lastItem || condition ? this._next(condition)
-                    : this.loopItems(200, 1);
+                if (!this.lastItem || condition) this._next()
+                else this.loopItems(200, 1);
                 _current();
                 break;
             case 'previous':
-                this.currentItem || condition ? this._previous()
-                    : this.loopItems(200, 0);
+                if (this.currentItem || condition) this._previous()
+                else this.loopItems(200, 0);
                 _current();
                 break;
             case 'stay':
@@ -328,15 +328,11 @@ class Slider extends TouchHandler {
 
 
     //*                                 Helper Methods
+    // Set current values
     setCurrent(value) {
         this.currentItem = -value;
         this.currentPercent = (value * 100);
         this.currentActiveBubble();
-    }
-
-    discreteSwitch(value) {
-        this.setCurrent(value);
-        this.moveTo(value, 0);
     }
 
     // Get current values
