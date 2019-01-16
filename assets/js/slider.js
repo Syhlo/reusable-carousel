@@ -42,7 +42,7 @@ class TouchHandler {
             const movement = this.initial - newPos;                    //  Difference between initial and new position
             movement >= 0 ? this.swipedLeft(movement) : this.swipedRight(movement);
         }
-        // this.debug(event);
+        this.debug(event);
     }
 
     //*                                  Controls
@@ -282,8 +282,8 @@ class Slider extends TouchHandler {
     //*                                 Autoplay Controls
     play() {
         this.playing = setInterval(() => {
-            this.element.style.transition = 'left 0.4s';
-            !this.lastItem ? this.next() : this.loopItems(0, 400, 1);
+            this.element.style.transition = 'left 0.6s';
+            !this.lastItem ? this.next() : this.loopItems(600, 1);
         }, this.settings.autoplaySpeed);
         this.createAutoplay();
     }
@@ -296,38 +296,36 @@ class Slider extends TouchHandler {
         }
     }
 
-    loopItems(index, transition, direction) {
-        let items = -(this.items.length);
+    loopItems(transition, direction) {
+        let value = -(this.items.length);
         switch (direction) {
             case 0:
-                this.loopPrevious(index, transition, items);
+                this.loopPrevious(transition, value);
                 break;
             case 1:
-                this.loopNext(index, transition);
+                this.loopNext(transition);
                 break;
         }
     }
 
 
-    loopPrevious(index, transition, items) {
+    loopPrevious(transition, value) {
         this.element.append(
-            this.items[index].cloneNode(false)
+            this.items[0].cloneNode(false)
         );
-        this.discreteSwitch(-(items * 100));
-        this.setCurrent(-items);
+        this.discreteSwitch(value);
         setTimeout(() => {
-            this.previous();
-        }, 1)
+            this.previous()
+        }, 10)
         setTimeout(() => {
             this.element.removeChild(this.element.lastChild);
             this.getCurrent();
-            this.debug();
         }, transition)
     }
 
-    loopNext(index, transition) {
+    loopNext(transition) {
         this.element.append(
-            this.items[index].cloneNode(false)
+            this.items[0].cloneNode(false)
         );
         this.next(true);
         this.setCurrent(0);
@@ -341,13 +339,15 @@ class Slider extends TouchHandler {
     //*                                 Overriding super functions
     next(bypass) {
         super.next(bypass) ? true :
-            this.loopItems(0, 200, 1);
+            this.loopItems(200, 1);
+        this.debug();
     }
 
     previous(bypass) {
-        // If super.previous runs, don't run loopItems
+        // If super.previous runs, don't run loopvalue
         super.previous(bypass) ? true :
-            this.loopItems(0, 200, 0);
+            this.loopItems(200, 0);
+        this.debug();
     }
 
     move(event) {
@@ -357,14 +357,15 @@ class Slider extends TouchHandler {
 
     //*                                 Helper Methods
     setCurrent(value) {
-        this.currentItem = value;
-        this.currentPercent = -(value * 100);
+        this.currentItem = -value;
+        this.currentPercent = (value * 100);
         this.currentActiveBubble();
     }
 
-    discreteSwitch(value) {
+    discreteSwitch(value, callback) {
+        this.setCurrent(value);
         this.element.style.removeProperty('transition');
-        this.element.style.left = -value + '%';
+        this.element.style.left = (value * 100) + '%';
     }
 
     // Get current values
