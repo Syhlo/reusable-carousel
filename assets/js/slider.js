@@ -42,7 +42,7 @@ class TouchHandler {
             const movement = this.initial - newPos;                    //  Difference between initial and new position
             movement >= 0 ? this.swipedLeft(movement) : this.swipedRight(movement);
         }
-        this.debug(event);
+        // this.debug(event);
     }
 
     //*                                  Controls
@@ -59,7 +59,6 @@ class TouchHandler {
     }
 
     swipedRight(movement) {
-        this.element.style.transition = 'left 0.2s'
         if (-this.threshold > movement) {
             this.previous();
         } else {
@@ -68,7 +67,6 @@ class TouchHandler {
     }
 
     swipedLeft(movement) {
-        this.element.style.transition = 'left 0.2s'
         if (movement > this.threshold) {
             this.next();
         } else {
@@ -80,16 +78,20 @@ class TouchHandler {
     //*                                 Movement
 
     next(bypass) {
+        this.element.style.transition = `left 200ms`;
         if (!this.lastItem || bypass) {
             this.element.style.left = this.currentPercent - 100 + '%';
             this.getCurrent();
+            return true
         }
     }
 
     previous(bypass) {
+        this.element.style.transition = `left 200ms`;
         if (this.currentItem || bypass) {
             this.element.style.left = this.currentPercent + 100 + '%';
             this.getCurrent();
+            return true
         }
     }
 
@@ -281,7 +283,7 @@ class Slider extends TouchHandler {
     play() {
         this.playing = setInterval(() => {
             this.element.style.transition = 'left 0.4s';
-            !this.lastItem ? this.next() : this.loopItems(0, 400);
+            !this.lastItem ? this.next() : this.loopItems(0, 400, 1);
         }, this.settings.autoplaySpeed);
         this.createAutoplay();
     }
@@ -294,7 +296,36 @@ class Slider extends TouchHandler {
         }
     }
 
-    loopItems(index, transition) {
+    loopItems(index, transition, direction) {
+        let items = -(this.items.length);
+        switch (direction) {
+            case 0:
+                this.loopPrevious(index, transition, items);
+                break;
+            case 1:
+                this.loopNext(index, transition);
+                break;
+        }
+    }
+
+
+    loopPrevious(index, transition, items) {
+        this.element.append(
+            this.items[index].cloneNode(false)
+        );
+        this.discreteSwitch(-(items * 100));
+        this.setCurrent(-items);
+        setTimeout(() => {
+            this.previous();
+        }, 1)
+        setTimeout(() => {
+            this.element.removeChild(this.element.lastChild);
+            this.getCurrent();
+            this.debug();
+        }, transition)
+    }
+
+    loopNext(index, transition) {
         this.element.append(
             this.items[index].cloneNode(false)
         );
@@ -303,8 +334,20 @@ class Slider extends TouchHandler {
         setTimeout(() => {
             this.discreteSwitch(0);
             this.getCurrent();
-            this.element.removeChild(this.element.lastChild)
-        }, transition);
+            this.element.removeChild(this.element.lastChild);
+        }, transition)
+    }
+
+    //*                                 Overriding super functions
+    next(bypass) {
+        super.next(bypass) ? true :
+            this.loopItems(0, 200, 1);
+    }
+
+    previous(bypass) {
+        // If super.previous runs, don't run loopItems
+        super.previous(bypass) ? true :
+            this.loopItems(0, 200, 0);
     }
 
     move(event) {
@@ -313,15 +356,15 @@ class Slider extends TouchHandler {
     }
 
     //*                                 Helper Methods
-
     setCurrent(value) {
         this.currentItem = value;
+        this.currentPercent = -(value * 100);
         this.currentActiveBubble();
     }
 
     discreteSwitch(value) {
-        this.element.style.transition = 'none';
-        this.element.style.left = value + '%';
+        this.element.style.removeProperty('transition');
+        this.element.style.left = -value + '%';
     }
 
     // Get current values
