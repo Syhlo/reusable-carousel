@@ -350,6 +350,44 @@ class Slider extends TouchHandler {
         this.pause();
     }
 
+    //*                                 Slider movement
+
+    moveTo(input, speed, condition) {
+        this.element.style.transition = `left ${speed}ms`;
+        let _current = () => { this.getCurrent(); }
+        switch (input) {
+            case 'next':
+                !this.lastItem || condition ? this._next() : this.loopItems(200, 1);
+                _current();
+                break;
+            case 'previous':
+                !this.currentItem || condition ? this._previous() : this.loopItems(200, 0);
+                _current();
+                break;
+            case 'stay':
+                this._stay();
+                break;
+            case 'bubble':
+                this._bubble();
+                _current();
+                break;
+            case 'move':
+                this._move(condition);
+                break;
+            default:
+            // Handle integer input
+        }
+        this.pause();
+    }
+
+    _next() { this.element.style.left = `${this.currentPercent - 100}%`; }
+    _previous() { this.element.style.left = `${this.currentPercent + 100}%`; }
+    _stay() { this.element.style.left = `${this.currentPercent}%`; }
+    _bubble() { this.element.style.left = `${this.currentItem * -100}%`; }
+    _index(value) { this.element.style.left = `${value * 100}%`; }
+    _moveSlide(move) { this.element.style.left = `${this.currentPercent - move}%`; }
+
+
     //*                                 Helper Methods
     setCurrent(value) {
         this.currentItem = -value;
