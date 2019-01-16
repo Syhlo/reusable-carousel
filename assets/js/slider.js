@@ -42,7 +42,6 @@ class TouchHandler {
             const movement = this.initial - newPos;                    //  Difference between initial and new position
             movement >= 0 ? this.swipedLeft(movement) : this.swipedRight(movement);
         }
-        this.debug(event);
     }
 
     //*                                  Controls
@@ -54,7 +53,7 @@ class TouchHandler {
                 this.moveSlide(movement);
             case 1:
                 if (!this.lastItem) { this.moveSlide(movement); }
-                if (movement < 0) { this.moveSlide(movement); }
+                else if (movement < 0) { this.moveSlide(movement); }
         }
     }
 
@@ -111,7 +110,7 @@ class TouchHandler {
 
     allowed(move) {
         let movable = move < 2.5 && move > -2.5;                    //  Movable threshold
-        if (this.currentItem === 0 & move > 0 && movable) {
+        if (!this.currentItem & move > 0 && movable) {
             return 0;
         } else if (this.currentItem && movable) {
             return 1;
@@ -125,7 +124,6 @@ class TouchHandler {
     }
 
     debug(event) {
-        var now = new Date()
         console.log('%cDebugging Values', 'font-weight: bold')
         console.log(event)
         console.log(
@@ -142,7 +140,8 @@ class TouchHandler {
 //TODO      Base Functionality
 //*     - Start mouse dragging controls
 //*     - Create a 'count' (e.g. slide 2/6) in top right
-//*     - All controls should loop forward/backwards
+//*     - All controls should loop forward/backwards [Mostly done]
+//*     - Arrow key support?
 class Slider extends TouchHandler {
     constructor(id, settings = {}) {
         super()
@@ -208,17 +207,15 @@ class Slider extends TouchHandler {
         if (this.build('autoplay')) {
             let autoplay = this.slider.getElementsByClassName('autoplay')[0];
             if (!this.playing) {
-                autoplay.innerHTML = `<g>
+                autoplay.innerHTML = `
                     <circle cx="64.5" cy = "64.5" r = "58.417" />
-                    <path transform="matrix(.68898 -.63178 .63178 .68898 -17.173 45.244)" d="m79.202 100.52-68.488-15.162 47.375-51.732 10.557 33.447z" />
-                    </g >`
+                    <path transform="matrix(.68898 -.63178 .63178 .68898 -17.173 45.244)" d="m79.202 100.52-68.488-15.162 47.375-51.732 10.557 33.447z" />`
             } else {
-                autoplay.innerHTML = `<g>
+                autoplay.innerHTML = `
                     <circle cx="64.5" cy="64.5" r="58.417"/>
                     <g transform="matrix(.93515 0 0 1 6.7155 -.10065)">
                     <path d="m45 95h9.9833v-60h-9.9833z"/>
                     <path d="m70 95h9.9833v-60h-9.9833z"/>
-                    </g>
                     </g>`
             }
         }
@@ -340,14 +337,12 @@ class Slider extends TouchHandler {
     next(bypass) {
         super.next(bypass) ? true :
             this.loopItems(200, 1);
-        this.debug();
     }
 
     previous(bypass) {
         // If super.previous runs, don't run loopvalue
         super.previous(bypass) ? true :
             this.loopItems(200, 0);
-        this.debug();
     }
 
     move(event) {
