@@ -116,7 +116,7 @@ class Slider extends TouchHandler {
             this.element.getElementsByTagName('img');
 
         // Slide information
-        this.lastItem = (this.currentPercent === -((this.items.length - 1) * 100));
+        this.lastItem = (this.currentPercent === -((this.items.length - 2) * 100));
         this.settings = settings;
 
         // Autoplay settings
@@ -129,62 +129,62 @@ class Slider extends TouchHandler {
     //*                                  Slider Creation
     createslider() {
         if (this.items.length > 1) {
-            this.createLoop();
-            this.createBubbles();
-            this.currentActiveBubble();
-            this.createArrows();
-            this.handleAutoplay();
-            if (this.build('swiping')) this.swipeEvents();
+            if (this.build('bubbles')) this.createBubbles();
+            if (this.build('arrows')) this.createArrows();
+            if (this.build('autoplay')) this.handleAutoplay();
+            if (this.build('touch')) this.swipeEvents();
             this.buildControls();
+            this.createLoop();
         }
     }
 
     createLoop() {
-        // this.element.append(
-        //     this.items[0].cloneNode(false)
-        // );
-        console.log(this.items.firstChild)
+        // Clone last item
+        this.element.insertBefore(
+            this.items[this.items.length - 1].cloneNode(false),
+            this.element.firstElementChild
+        )
+        // Clone first item
+        this.element.append(
+            this.items[1].cloneNode(false)
+        );
+        this.moveTo('next', 0)
     }
 
     createBubbles() {
-        if (this.build('bubbles')) {
-            for (let i = 0; i < this.items.length; i++) { // refactor: i = 1; i < this.items.length - 1
-                let bubble = document.createElement('span');
-                bubble.className = 'bubble';
-                let wrapper = document.createElement('span');
-                wrapper.className = 'bubble-wrapper';
-                wrapper.appendChild(bubble);                        //  Put the bubble in a wrapper
-                this.imageSelector.appendChild(wrapper);            //  Add bubble to image selector
-                this.bubbles.push(wrapper);                         //  Add bubble to bubbles array for listeners
-            }
+        for (let i = 0; i < this.items.length; i++) {
+            let bubble = document.createElement('span');
+            bubble.className = 'bubble';
+            let wrapper = document.createElement('span');
+            wrapper.className = 'bubble-wrapper';
+            wrapper.appendChild(bubble);                        //  Put the bubble in a wrapper
+            this.imageSelector.appendChild(wrapper);            //  Add bubble to image selector
+            this.bubbles.push(wrapper);                         //  Add bubble to bubbles array for listeners
         }
+        this.currentActiveBubble();
     }
 
     createArrows() {
-        if (this.build('arrows')) {
-            let arrows = [...this.slider.querySelectorAll('.is-slider > .arrow')];
-            arrows.forEach((arrow) => {
-                arrow.innerHTML =
-                    '<path d="m39.964 126.15 61.339-61.339-61.339-61.339-12.268 12.268 49.071 49.071-49.071 49.071 12.268 12.268" />';
-            });
-        }
+        let arrows = [...this.slider.querySelectorAll('.is-slider > .arrow')];
+        arrows.forEach((arrow) => {
+            arrow.innerHTML =
+                '<path d="m39.964 126.15 61.339-61.339-61.339-61.339-12.268 12.268 49.071 49.071-49.071 49.071 12.268 12.268" />';
+        });
     }
 
     createAutoplay() {
-        if (this.build('autoplay')) {
-            let autoplay = this.slider.getElementsByClassName('autoplay')[0];
-            if (!this.playing) {
-                autoplay.innerHTML = `
+        let autoplay = this.slider.getElementsByClassName('autoplay')[0];
+        if (!this.playing) {
+            autoplay.innerHTML = `
                     <circle cx="64.5" cy = "64.5" r = "58.417" />
                     <path transform="matrix(.68898 -.63178 .63178 .68898 -17.173 45.244)" d="m79.202 100.52-68.488-15.162 47.375-51.732 10.557 33.447z" />`
-            } else {
-                autoplay.innerHTML = `
+        } else {
+            autoplay.innerHTML = `
                     <circle cx="64.5" cy="64.5" r="58.417"/>
                     <g transform="matrix(.93515 0 0 1 6.7155 -.10065)">
                     <path d="m45 95h9.9833v-60h-9.9833z"/>
                     <path d="m70 95h9.9833v-60h-9.9833z"/>
                     </g>`
-            }
         }
     }
 
@@ -197,7 +197,7 @@ class Slider extends TouchHandler {
 
         for (let i = 0; i < this.bubbles.length; i++) {
             this.bubbles[i].addEventListener("click", () => {
-                this.currentItem = i;
+                this.currentItem = i + 1;
                 this.moveTo('bubble', 200);
                 this.currentActiveBubble();
             });
@@ -231,7 +231,7 @@ class Slider extends TouchHandler {
     //*                                 Autoplay Controls
     play() {
         this.playing = setInterval(() => {
-            !this.lastItem ? this.moveTo('next', 600) : this.sliderLoop(600, 1);
+            !this.lastItem ? this.moveTo('next', 600) : this.sliderLoop(1, 600);
         }, this.settings.autoplaySpeed);
         this.createAutoplay();
     }
@@ -246,41 +246,25 @@ class Slider extends TouchHandler {
 
     //*                                  Item Loop Methods
 
-    sliderLoop(transition, direction) {
-        switch (direction) {
-            case 0:
-                this.loopPrevious(transition, -(this.items.length));
-                break;
-            case 1:
-                this.loopNext(transition);
-                break;
-        }
+    sliderLoop(direction, speed) {
+        direction ? this.loopNext(speed) : this.loopPrevious(speed);
     }
 
-    loopPrevious(transition, value) {
-        this.element.append(
-            this.items[0].cloneNode(false)
-        );
-        this.moveTo(value, 0)
+    loopPrevious(speed) {
+        this.element.style.transition = `left ${speed}ms`;
+        this._previous();
         setTimeout(() => {
-            this.moveTo('previous', transition);
-        }, 10);
-        setTimeout(() => {
-            this.element.removeChild(this.element.lastChild);
-            this.getCurrent();
-        }, transition);
+            this.moveTo(this.items.length - 2, 0)
+        }, speed - 65)
+        this.getCurrent();
     }
 
-    loopNext(transition) {
-        this.element.append(
-            this.items[0].cloneNode(false)
-        );
-        this.moveTo('next', transition, true);
+    loopNext(speed) {
+        this.element.style.transition = `left ${speed}ms`;
+        this._next()
         setTimeout(() => {
-            this.moveTo(0, 0);
-            this.getCurrent();
-            this.element.removeChild(this.element.lastChild);
-        }, transition);
+            this.moveTo(1, 0);
+        }, speed - 65);
     }
 
     //*                                 Slider movement
@@ -289,13 +273,13 @@ class Slider extends TouchHandler {
         let _current = () => { this.getCurrent(); }
         switch (input) {
             case 'next':
-                if (!this.lastItem || condition) this._next()
-                else this.sliderLoop(speed, 1);
+                if (!this.lastItem) this._next()
+                else this.sliderLoop(1, speed);
                 _current();
                 break;
             case 'previous':
-                if (this.currentItem || condition) this._previous()
-                else this.sliderLoop(speed, 0);
+                if (this.currentItem === 1) this.sliderLoop(0, speed)
+                else this._previous();
                 _current();
                 break;
             case 'stay':
@@ -320,7 +304,7 @@ class Slider extends TouchHandler {
     _previous() { this.element.style.left = `${this.currentPercent + 100}%`; }
     _stay() { this.element.style.left = `${this.currentPercent}%`; }
     _bubble() { this.element.style.left = `${this.currentItem * -100}%`; }
-    _index(value) { this.element.style.left = `${value * 100}%`; }
+    _index(value) { this.element.style.left = `${-(value * 100)}%`; }
     _moveSlide(move) { this.element.style.left = `${this.currentPercent - move}%`; }
 
 
@@ -336,13 +320,13 @@ class Slider extends TouchHandler {
     getCurrent() {
         super.getCurrent();
         this.currentActiveBubble();
-        this.lastItem = this.currentPercent === -((this.items.length - 1) * 100);
+        this.lastItem = this.currentPercent === -((this.items.length - 2) * 100);
     }
 
     // Determines current active bubble
     currentActiveBubble() {
         this.bubbles.forEach((bubble, index) => {
-            if (index === this.currentItem) {
+            if (index + 1 === this.currentItem) {
                 bubble.children[0].classList.add("bubble-active");
             } else {
                 bubble.children[0].classList.remove("bubble-active");
@@ -362,8 +346,8 @@ const FIRST = new Slider('first', {
     // Controls
     bubbles: true,
     arrows: false,
-    swiping: false,
-    dragging: false,
+    touch: false,
+    drag: false,
     autoplay: false,
 
     // Autoplay settings
@@ -378,8 +362,8 @@ const SECOND = new Slider('second', {
     // Controls
     bubbles: false,
     arrows: true,
-    swiping: false,
-    dragging: false,
+    touch: true,
+    drag: false,
     autoplay: true,
 
     // Autoplay settings
