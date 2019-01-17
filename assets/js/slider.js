@@ -134,7 +134,7 @@ class Slider extends TouchHandler {
             this.currentActiveBubble();
             this.createArrows();
             this.handleAutoplay();
-            this.swipeEvents();
+            if (this.build('swiping')) this.swipeEvents();
             this.buildControls();
         }
     }
