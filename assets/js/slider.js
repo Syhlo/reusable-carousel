@@ -38,16 +38,16 @@ class TouchHandler {
     touchEnd(event) {
         event.preventDefault();
         if (this.firstTouch(event)) {
-            const newPos = (event.changedTouches[0].clientX / 10)   //  New touch position
-            const movement = this.initial - newPos;                    //  Difference between initial and new position
-            movement >= 0 ? this.swipedLeft(movement) : this.swipedRight(movement);
+            const NEWPOS = (event.changedTouches[0].clientX / 10)   //  New touch position
+            const CHANGE = this.initial - NEWPOS;                    //  Difference between initial and new position
+            CHANGE >= 0 ? this.swipedLeft(CHANGE) : this.swipedRight(CHANGE);
         }
     }
 
     //*                                  Controls
     handleMove(event) {
-        const touch = event.touches[0].clientX / 10;                //  Current touch position
-        let movement = (this.initial - touch) / 10;
+        const TOUCH = event.touches[0].clientX / 10;                //  Current touch position
+        let movement = (this.initial - TOUCH) / 10;
         switch (this.allowed(movement)) {
             case 0:
                 this.moveTo('move', 0, movement)
@@ -57,16 +57,16 @@ class TouchHandler {
         }
     }
 
-    swipedRight(movement) {
-        if (-this.threshold > movement) {
+    swipedRight(CHANGE) {
+        if (-this.threshold > CHANGE) {
             this.moveTo('previous', 200);
         } else {
             this.moveTo('stay', 200);
         }
     }
 
-    swipedLeft(movement) {
-        if (movement > this.threshold) {
+    swipedLeft(CHANGE) {
+        if (CHANGE > this.threshold) {
             this.moveTo('next', 200);
         } else {
             this.moveTo('stay', 200);
@@ -79,10 +79,10 @@ class TouchHandler {
     }
 
     allowed(move) {
-        let movable = move < 2.5 && move > -2.5;                    //  Movable threshold
-        if (!this.currentItem & move > 0 && movable) {
+        const MOVABLE = move < 2.5 && move > -2.5;                    //  Movable threshold
+        if (!this.currentItem & move > 0 && MOVABLE) {
             return 0;
-        } else if (this.currentItem && movable) {
+        } else if (this.currentItem && MOVABLE) {
             return 1;
         }
     }
@@ -91,17 +91,6 @@ class TouchHandler {
         this.currentItem =
             parseInt(this.element.style.left.replace(/\D/g, '')) / 100;
         this.currentPercent = -(this.currentItem * 100);
-    }
-
-    debug(event) {
-        console.log('%cDebugging Values', 'font-weight: bold')
-        console.log(event)
-        console.log(
-            'currentItem: ' + this.currentItem + '\n' +
-            'lastItem: ' + this.lastItem + '\n' +
-            'currentPercent ' + this.currentPercent + '\n' +
-            'left: ' + this.element.style.left)
-        console.log(' ')
     }
 
 }
@@ -140,6 +129,7 @@ class Slider extends TouchHandler {
     //*                                  Slider Creation
     createslider() {
         if (this.items.length > 1) {
+            this.createLoop();
             this.createBubbles();
             this.currentActiveBubble();
             this.createArrows();
@@ -149,9 +139,16 @@ class Slider extends TouchHandler {
         }
     }
 
+    createLoop() {
+        // this.element.append(
+        //     this.items[0].cloneNode(false)
+        // );
+        console.log(this.items.firstChild)
+    }
+
     createBubbles() {
         if (this.build('bubbles')) {
-            for (let i = 0; i < this.items.length; i++) {
+            for (let i = 0; i < this.items.length; i++) { // refactor: i = 1; i < this.items.length - 1
                 let bubble = document.createElement('span');
                 bubble.className = 'bubble';
                 let wrapper = document.createElement('span');
@@ -234,7 +231,7 @@ class Slider extends TouchHandler {
     //*                                 Autoplay Controls
     play() {
         this.playing = setInterval(() => {
-            !this.lastItem ? this.moveTo('next', 600) : this.loopItems(600, 1);
+            !this.lastItem ? this.moveTo('next', 600) : this.sliderLoop(600, 1);
         }, this.settings.autoplaySpeed);
         this.createAutoplay();
     }
@@ -247,11 +244,12 @@ class Slider extends TouchHandler {
         }
     }
 
-    loopItems(transition, direction) {
-        let value = -(this.items.length);
+    //*                                  Item Loop Methods
+
+    sliderLoop(transition, direction) {
         switch (direction) {
             case 0:
-                this.loopPrevious(transition, value);
+                this.loopPrevious(transition, -(this.items.length));
                 break;
             case 1:
                 this.loopNext(transition);
@@ -278,7 +276,6 @@ class Slider extends TouchHandler {
             this.items[0].cloneNode(false)
         );
         this.moveTo('next', transition, true);
-        this.setCurrent(0);
         setTimeout(() => {
             this.moveTo(0, 0);
             this.getCurrent();
@@ -293,12 +290,12 @@ class Slider extends TouchHandler {
         switch (input) {
             case 'next':
                 if (!this.lastItem || condition) this._next()
-                else this.loopItems(200, 1);
+                else this.sliderLoop(speed, 1);
                 _current();
                 break;
             case 'previous':
                 if (this.currentItem || condition) this._previous()
-                else this.loopItems(200, 0);
+                else this.sliderLoop(speed, 0);
                 _current();
                 break;
             case 'stay':
@@ -361,7 +358,7 @@ class Slider extends TouchHandler {
     }
 }
 
-let first = new Slider('first', {
+const FIRST = new Slider('first', {
     // Controls
     bubbles: true,
     arrows: false,
@@ -377,7 +374,7 @@ let first = new Slider('first', {
     numbers: false
 });
 
-let second = new Slider('second', {
+const SECOND = new Slider('second', {
     // Controls
     bubbles: false,
     arrows: true,
