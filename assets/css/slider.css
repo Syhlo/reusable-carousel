@@ -55,8 +55,8 @@
 .count {
   position: absolute;
   z-index: 3;
-  bottom: 8%;
-  left: 6.5%;
+  top: 8%;
+  right: 5%;
   transform: translateX(-50%);
   font-size: 28px;
   color: rgba(255,255,255,0.95);
@@ -188,6 +188,9 @@
     top: 45%;
   }
   
+  .count {
+    right: 5%;
+  }
 }
 
 /* Mobile */
@@ -255,7 +258,7 @@
 
   .count {
     font-size: 16px;
-    left: 5%;
+    right: 7%;
   }
   
 }

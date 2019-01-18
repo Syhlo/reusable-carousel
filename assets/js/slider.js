@@ -7,7 +7,7 @@ class TouchHandler {
     constructor() {
         this.initial;                                               //  Initial touch position
         this.threshold = 5;                                         //  % of item before triggering next slide
-        this.currentItem = 0;                                           //  Current item
+        this.currentItem = 0;                                       //  Current item
         this.currentPercent = -0;                                   //  Percentage based currentItem
         this.lastItem;
     }
@@ -16,7 +16,6 @@ class TouchHandler {
         this.element.addEventListener('touchstart', (event) => this.touchStart(event), { passive: false });
         this.element.addEventListener('touchmove', (event) => this.touchMove(event), { passive: false });
         this.element.addEventListener('touchend', (event) => this.touchEnd(event), { passive: false });
-        this.element.addEventListener('transitionend', () => this.element.style.removeProperty('transition'));
     }
 
     //*                                  Event Handlers
@@ -50,26 +49,26 @@ class TouchHandler {
         let movement = (this.initial - TOUCH) / 10;
         switch (this.allowed(movement)) {
             case 0:
-                this.moveTo('move', 0, movement)
+                this._moveSlide(movement)
             case 1:
-                if (!this.lastItem) { this.moveTo('move', 0, movement) }
-                else if (movement < 0) { this.moveTo('move', 0, movement) }
+                if (!this.lastItem) { this._moveSlide(movement) }
+                else if (movement < 0) { this._moveSlide(movement) }
         }
     }
 
     swipedRight(CHANGE) {
         if (-this.threshold > CHANGE) {
-            this.moveTo('previous', 200);
+            this.moveTo('previous', 300);
         } else {
-            this.moveTo('stay', 200);
+            this.moveTo('stay', 300);
         }
     }
 
     swipedLeft(CHANGE) {
         if (CHANGE > this.threshold) {
-            this.moveTo('next', 200);
+            this.moveTo('next', 300);
         } else {
-            this.moveTo('stay', 200);
+            this.moveTo('stay', 300);
         }
     }
 
@@ -92,14 +91,11 @@ class TouchHandler {
             parseInt(this.element.style.left.replace(/\D/g, '')) / 100;
         this.currentPercent = -(this.currentItem * 100);
     }
-
 }
 
 //?             Slider
 //TODO      Base Functionality
 //*     - Start mouse dragging controls
-//?     - Create a 'count' (e.g. slide 2/6) in top right
-//*     - Refactor looping to work out kinks
 //*     - Arrow key support
 class Slider extends TouchHandler {
     constructor(id, settings = {}) {
@@ -117,9 +113,10 @@ class Slider extends TouchHandler {
 
         // Slide information
         this.lastItem = (this.currentPercent === -((this.items.length - 2) * 100));
-        this.settings = settings;
+        this.animating = false;
 
-        // Autoplay settings
+        // Settings
+        this.settings = settings;
         this.playing = this.build('autoplayOnload') ? false : true;
 
         //  Init
@@ -133,6 +130,7 @@ class Slider extends TouchHandler {
             if (this.build('arrows')) this.createArrows();
             if (this.build('autoplay')) this.handleAutoplay();
             if (this.build('touch')) this.swipeEvents();
+            if (this.build('number')) this.numberDisplay();
             this.buildControls();
             this.createLoop();
         }
@@ -148,7 +146,7 @@ class Slider extends TouchHandler {
         this.element.append(
             this.items[1].cloneNode(false)
         );
-        this.moveTo('next', 0)
+        this.moveTo('next', 0);
     }
 
     createBubbles() {
@@ -188,6 +186,17 @@ class Slider extends TouchHandler {
         }
     }
 
+    numberDisplay() {
+        const DISPLAY = this.slider.querySelector('.count');
+        if (!this.currentItem) {
+            DISPLAY.innerText = `${this.items.length - 2}`;
+        } else if (this.currentItem === this.items.length - 1) {
+            DISPLAY.innerText = '1'
+        } else {
+            DISPLAY.innerText = `${this.currentItem}`
+        }
+    }
+
     //*                                  Listeners
     buildControls() {
         let arrows = [...this.slider.getElementsByClassName('arrow')];
@@ -205,16 +214,19 @@ class Slider extends TouchHandler {
 
         let autoplay = this.slider.getElementsByClassName('autoplay')[0];
         autoplay.addEventListener('click', () => this.handleAutoplay());
+
+        this.element.addEventListener('transitionend', () => {
+            this.element.style.removeProperty('transition');
+            this.animating = false;
+        })
     }
 
     //*                                  Control Handlers
     handleArrowPress(index) {
-        if (index === 0) {
-            this.moveTo('previous', 200); // moveTo works
-            this.pause();
+        if (!index) {
+            this.moveTo('previous', 300)
         } else {
-            this.moveTo('next', 200)
-            this.pause();
+            this.moveTo('next', 300);
         }
     }
 
@@ -251,52 +263,57 @@ class Slider extends TouchHandler {
     }
 
     loopPrevious(speed) {
+        let end = () => {
+            this.moveTo(this.items.length - 2, 0);
+            this.element.removeEventListener('transitionend', end);
+            this.animating = false;
+        }
         this.element.style.transition = `left ${speed}ms`;
         this._previous();
-        setTimeout(() => {
-            this.moveTo(this.items.length - 2, 0)
-        }, speed - 65)
-        this.getCurrent();
+        this.element.addEventListener('transitionend', end);
     }
 
     loopNext(speed) {
+        let end = () => {
+            this.moveTo(1, 0);
+            this.element.removeEventListener('transitionend', end);
+            this.animating = false;
+        }
         this.element.style.transition = `left ${speed}ms`;
         this._next()
-        setTimeout(() => {
-            this.moveTo(1, 0);
-        }, speed - 65);
+        this.element.addEventListener('transitionend', end);
     }
 
     //*                                 Slider movement
     moveTo(input, speed, condition) {
-        this.element.style.transition = `left ${speed}ms`;
-        let _current = () => { this.getCurrent(); }
-        switch (input) {
-            case 'next':
-                if (!this.lastItem) this._next()
-                else this.sliderLoop(1, speed);
-                _current();
-                break;
-            case 'previous':
-                if (this.currentItem === 1) this.sliderLoop(0, speed)
-                else this._previous();
-                _current();
-                break;
-            case 'stay':
-                this._stay();
-                break;
-            case 'bubble':
-                this._bubble();
-                _current();
-                this.pause();
-                break;
-            case 'move':
-                this._moveSlide(condition);
-                this.pause();
-                break;
-            default:
-                this._index(input);
-                _current();
+        if (!this.animating) {
+            this.element.style.transition = `left ${speed}ms`;
+            const ANIMATE = () => { if (speed) this.animating = true; }
+            switch (input) {
+                case 'next':
+                    ANIMATE();
+                    if (this.lastItem) this.sliderLoop(1, speed);
+                    else this._next();
+                    break;
+                case 'previous':
+                    ANIMATE();
+                    if (this.currentItem === 1) this.sliderLoop(0, speed);
+                    else this._previous();
+                    break;
+                case 'stay':
+                    this._stay();
+                    break;
+                case 'bubble':
+                    this._bubble();
+                    this.animating = false;
+                    this.pause();
+                    break;
+                default:
+                    ANIMATE();
+                    this._index(input);
+                    if (!this.playing) this.pause();
+            }
+            this.getCurrent();
         }
     }
 
@@ -307,6 +324,11 @@ class Slider extends TouchHandler {
     _index(value) { this.element.style.left = `${-(value * 100)}%`; }
     _moveSlide(move) { this.element.style.left = `${this.currentPercent - move}%`; }
 
+    //*                                 Polymorph
+    handleMove(event) {
+        super.handleMove(event)
+        this.animating = false;
+    }
 
     //*                                 Helper Methods
     // Set current values
@@ -320,6 +342,7 @@ class Slider extends TouchHandler {
     getCurrent() {
         super.getCurrent();
         this.currentActiveBubble();
+        if (this.build('number')) this.numberDisplay();
         this.lastItem = this.currentPercent === -((this.items.length - 2) * 100);
     }
 
@@ -348,14 +371,14 @@ const FIRST = new Slider('first', {
     arrows: false,
     touch: false,
     drag: false,
-    autoplay: false,
+    autoplay: true,
 
     // Autoplay settings
     autoplayOnload: false,
-    autoplaySpeed: 2200,
+    autoplaySpeed: 2000,
 
     // Display numbers, e.g. slide 2/5
-    numbers: false
+    number: false
 });
 
 const SECOND = new Slider('second', {
@@ -364,12 +387,12 @@ const SECOND = new Slider('second', {
     arrows: true,
     touch: true,
     drag: false,
-    autoplay: true,
+    autoplay: false,
 
     // Autoplay settings
     autoplayOnload: false,
-    autoplaySpeed: 2200,
+    autoplaySpeed: 2000,
 
-    // Display numbers, e.g. slide 2/5
-    numbers: false
+    // Display slide number
+    number: true
 });
