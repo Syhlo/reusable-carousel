@@ -33,11 +33,11 @@ new Slider('first', {
     bubbles: true,
     arrows: true,
     swiping: true,
-    dragging: true,
+    dragging: false,
     autoplay: true,
     
     // Autoplay settings
-    autoplayOnload: false,
+    autoplayOnload: true,
     autoplaySpeed: 2500,
 
     // Display numbers, e.g. slide 2/5
