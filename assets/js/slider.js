@@ -2,6 +2,7 @@
 //TODO      Base Functionality
 //*     - Add .throttle and .debounce when applicable
 //*         - throttle the movement
+//*     - Refactor (handle touch and drag in one)
 //?  Goal: make TouchHandler reusable for similar assets
 class TouchHandler {
     constructor() {
@@ -85,12 +86,6 @@ class TouchHandler {
             return 1;
         }
     }
-
-    getCurrent() {
-        this.currentItem =
-            parseInt(this.element.style.left.replace(/\D/g, '')) / 100;
-        this.currentPercent = -(this.currentItem * 100);
-    }
 }
 
 //?             Slider
@@ -114,39 +109,27 @@ class Slider extends TouchHandler {
         // Slide information
         this.lastItem = (this.currentPercent === -((this.items.length - 2) * 100));
         this.animating = false;
+        this.playing = this.build('autoplayOnload') ? false : true;
 
         // Settings
         this.settings = settings;
-        this.playing = this.build('autoplayOnload') ? false : true;
 
         //  Init
         this.createslider();
     }
+
 
     //*                                  Slider Creation
     createslider() {
         if (this.items.length > 1) {
             if (this.build('bubbles')) this.createBubbles();
             if (this.build('arrows')) this.createArrows();
-            if (this.build('autoplay')) this.handleAutoplay();
+            if (this.build('autoplay')) this.autoplay();
+            if (this.build('number')) this.createNumber();
             if (this.build('touch')) this.swipeEvents();
-            if (this.build('number')) this.numberDisplay();
-            this.buildControls();
+            this.listeners();
             this.createLoop();
         }
-    }
-
-    createLoop() {
-        // Clone last item
-        this.element.insertBefore(
-            this.items[this.items.length - 1].cloneNode(false),
-            this.element.firstElementChild
-        )
-        // Clone first item
-        this.element.append(
-            this.items[1].cloneNode(false)
-        );
-        this.moveTo('next', 0);
     }
 
     createBubbles() {
@@ -159,7 +142,6 @@ class Slider extends TouchHandler {
             this.imageSelector.appendChild(wrapper);            //  Add bubble to image selector
             this.bubbles.push(wrapper);                         //  Add bubble to bubbles array for listeners
         }
-        this.currentActiveBubble();
     }
 
     createArrows() {
@@ -186,7 +168,7 @@ class Slider extends TouchHandler {
         }
     }
 
-    numberDisplay() {
+    createNumber() {
         const DISPLAY = this.slider.querySelector('.count');
         if (!this.currentItem) {
             DISPLAY.innerText = `${this.items.length - 2}`;
@@ -197,32 +179,32 @@ class Slider extends TouchHandler {
         }
     }
 
-    //*                                  Listeners
-    buildControls() {
-        let arrows = [...this.slider.getElementsByClassName('arrow')];
-        arrows.forEach((arrow, i) => arrow.addEventListener('click', () => {
-            this.handleArrowPress(i);
-        }));
-
-        for (let i = 0; i < this.bubbles.length; i++) {
-            this.bubbles[i].addEventListener("click", () => {
-                this.currentItem = i + 1;
-                this.moveTo('bubble', 200);
-                this.currentActiveBubble();
-            });
-        }
-
-        let autoplay = this.slider.getElementsByClassName('autoplay')[0];
-        autoplay.addEventListener('click', () => this.handleAutoplay());
-
-        this.element.addEventListener('transitionend', () => {
-            this.element.style.removeProperty('transition');
-            this.animating = false;
-        })
+    createLoop() {
+        // Clone last item
+        this.element.insertBefore(
+            this.items[this.items.length - 1].cloneNode(false),
+            this.element.firstElementChild
+        )
+        // Clone first item
+        this.element.append(
+            this.items[1].cloneNode(false)
+        );
+        this.moveTo('next', 0);
     }
 
+
     //*                                  Control Handlers
-    handleArrowPress(index) {
+    activeBubble() {
+        this.bubbles.forEach((bubble, index) => {
+            if (index + 1 === this.currentItem) {
+                bubble.children[0].classList.add("bubble-active");
+            } else {
+                bubble.children[0].classList.remove("bubble-active");
+            }
+        });
+    }
+
+    arrowPress(index) {
         if (!index) {
             this.moveTo('previous', 300)
         } else {
@@ -230,7 +212,9 @@ class Slider extends TouchHandler {
         }
     }
 
-    handleAutoplay() {
+
+    //*                                 Autoplay Controls
+    autoplay() {
         if (this.build('autoplay')) {
             if (!this.playing) {
                 this.play();
@@ -240,7 +224,6 @@ class Slider extends TouchHandler {
         }
     }
 
-    //*                                 Autoplay Controls
     play() {
         this.playing = setInterval(() => {
             !this.lastItem ? this.moveTo('next', 600) : this.sliderLoop(1, 600);
@@ -256,8 +239,8 @@ class Slider extends TouchHandler {
         }
     }
 
-    //*                                  Item Loop Methods
 
+    //*                                  Item Loop
     sliderLoop(direction, speed) {
         direction ? this.loopNext(speed) : this.loopPrevious(speed);
     }
@@ -283,6 +266,32 @@ class Slider extends TouchHandler {
         this._next()
         this.element.addEventListener('transitionend', end);
     }
+
+
+    //*                                  Listeners
+    listeners() {
+        let arrows = [...this.slider.getElementsByClassName('arrow')];
+        arrows.forEach((arrow, i) => arrow.addEventListener('click', () => {
+            this.arrowPress(i);
+        }));
+
+        for (let i = 0; i < this.bubbles.length; i++) {
+            this.bubbles[i].addEventListener("click", () => {
+                this.currentItem = i + 1;
+                this.moveTo('bubble', 200);
+                this.activeBubble();
+            });
+        }
+
+        let autoplay = this.slider.getElementsByClassName('autoplay')[0];
+        autoplay.addEventListener('click', () => this.autoplay());
+
+        this.element.addEventListener('transitionend', () => {
+            this.element.style.removeProperty('transition');
+            this.animating = false;
+        })
+    }
+
 
     //*                                 Slider movement
     moveTo(input, speed, condition) {
@@ -313,7 +322,7 @@ class Slider extends TouchHandler {
                     this._index(input);
                     if (!this.playing) this.pause();
             }
-            this.getCurrent();
+            this._update();
         }
     }
 
@@ -324,40 +333,17 @@ class Slider extends TouchHandler {
     _index(value) { this.element.style.left = `${-(value * 100)}%`; }
     _moveSlide(move) { this.element.style.left = `${this.currentPercent - move}%`; }
 
-    //*                                 Polymorph
-    handleMove(event) {
-        super.handleMove(event)
-        this.animating = false;
-    }
 
     //*                                 Helper Methods
-    // Set current values
-    setCurrent(value) {
-        this.currentItem = -value;
-        this.currentPercent = (value * 100);
-        this.currentActiveBubble();
-    }
-
-    // Get current values
-    getCurrent() {
-        super.getCurrent();
-        this.currentActiveBubble();
-        if (this.build('number')) this.numberDisplay();
+    _update() {
+        this.currentItem =
+            parseInt(this.element.style.left.replace(/\D/g, '')) / 100;
+        this.currentPercent = -(this.currentItem * 100);
+        this.activeBubble();
+        if (this.build('number')) this.createNumber();
         this.lastItem = this.currentPercent === -((this.items.length - 2) * 100);
     }
 
-    // Determines current active bubble
-    currentActiveBubble() {
-        this.bubbles.forEach((bubble, index) => {
-            if (index + 1 === this.currentItem) {
-                bubble.children[0].classList.add("bubble-active");
-            } else {
-                bubble.children[0].classList.remove("bubble-active");
-            }
-        });
-    }
-
-    // Determines whether or not to build a setting
     build(setting) {
         return Object.keys(this.settings).includes(setting) ?
             typeof this.settings[setting] === 'boolean' ? this.settings[setting] : false
