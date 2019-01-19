@@ -1,7 +1,6 @@
 //?             TouchHandler
 //TODO      Base Functionality
 //*     - Add .throttle and .debounce when applicable
-//*         - throttle the movement
 //*     - Refactor: Handle touch and drag in one
 //*     - Refactor: Remove methods that originate from child class,
 //*       instead polymorph the parent class' methods. In addition,
@@ -26,16 +25,13 @@ class TouchHandler {
     touchStart(event) {
         event.preventDefault()
         if (this.firstTouch(event)) {                               //  Prevents multitouch interaction
-            this.initial = event.touches[0].clientX / 10           //  Initial touch position
+            this.initial = event.touches[0].clientX / 10            //  Initial touch position
             this.currentPercent = -(this.currentItem * 100)         //  Percentage based currentItem
         }
     }
 
     touchMove(event) {
         event.preventDefault()
-        if (this.firstTouch(event)) {
-            this.handleMove(event)
-        }
     }
 
     touchEnd(event) {
@@ -48,11 +44,6 @@ class TouchHandler {
     }
 
     //*                                  Controls
-    handleMove(event) {
-        const TOUCH = event.touches[0].clientX / 10                //  Current touch position
-        let movement = (this.initial - TOUCH) / 10
-        this._moveSlide(movement)
-    }
 
     swipedRight(CHANGE) {
         if (-this.threshold > CHANGE) {
