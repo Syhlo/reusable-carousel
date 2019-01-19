@@ -2,7 +2,10 @@
 //TODO      Base Functionality
 //*     - Add .throttle and .debounce when applicable
 //*         - throttle the movement
-//*     - Refactor (handle touch and drag in one)
+//*     - Refactor: Handle touch and drag in one
+//*     - Refactor: Remove methods that originate from child class,
+//*       instead polymorph the parent class' methods. In addition,
+//*       allow for more information (vertical swiping, tapping, etc).
 //?  Goal: make TouchHandler reusable for similar assets
 class TouchHandler {
     constructor() {
@@ -48,13 +51,7 @@ class TouchHandler {
     handleMove(event) {
         const TOUCH = event.touches[0].clientX / 10                //  Current touch position
         let movement = (this.initial - TOUCH) / 10
-        switch (this.allowed(movement)) {
-            case 0:
-                this._moveSlide(movement)
-            case 1:
-                if (!this.lastItem) { this._moveSlide(movement) }
-                else if (movement < 0) { this._moveSlide(movement) }
-        }
+        this._moveSlide(movement)
     }
 
     swipedRight(CHANGE) {
@@ -77,21 +74,13 @@ class TouchHandler {
     firstTouch(event) {
         return event.changedTouches[0].identifier === 0
     }
-
-    allowed(move) {
-        const MOVABLE = move < 2.5 && move > -2.5                    //  Movable threshold
-        if (!this.currentItem & move > 0 && MOVABLE) {
-            return 0
-        } else if (this.currentItem && MOVABLE) {
-            return 1
-        }
-    }
 }
 
 //?             Slider
 //TODO      Base Functionality
 //*     - Start mouse dragging controls
 //*     - Arrow key support
+//*     - Remove ugly switch function moveTo, convert to a hash look up
 class Slider extends TouchHandler {
     constructor(id, settings = {}) {
         super()
@@ -119,7 +108,6 @@ class Slider extends TouchHandler {
 
 
     //*                                  Slider Creation
-
     createslider() {
         if (this.items.length > 1) {
             if (this.build('bubbles')) this.createBubbles()
@@ -134,7 +122,6 @@ class Slider extends TouchHandler {
 
 
     //*                                  Bubbles
-
     createBubbles() {
         for (let i = 0; i < this.items.length; i++) {
             let bubble = document.createElement('span')
@@ -148,9 +135,6 @@ class Slider extends TouchHandler {
         }
     }
 
-    // Need to fix issue with autoplay:
-    // Bubble takes a (figurative) second to update after looping
-    // Possibly recreate setCurrent and run first line?
     activeBubble() {
         this.bubbles.forEach((bubble, index) => {
             if (index + 1 === this.currentItem) {
@@ -163,7 +147,6 @@ class Slider extends TouchHandler {
 
 
     //*                                  Arrows
-
     createArrows() {
         let arrows = [...this.slider.querySelectorAll('.is-slider > .arrow')]
         arrows.forEach((arrow) => {
@@ -182,7 +165,6 @@ class Slider extends TouchHandler {
 
 
     //*                                 Autoplay
-
     autoplay() {
         if (this.build('autoplay')) {
             !this.playing ? this.play() : this.pause()
@@ -209,21 +191,20 @@ class Slider extends TouchHandler {
         let autoplay = this.slider.getElementsByClassName('autoplay')[0]
         if (!this.playing) {
             autoplay.innerHTML = `
-                                            <circle cx="64.5" cy = "64.5" r = "58.417" />
-                                            <path transform="matrix(.68898 -.63178 .63178 .68898 -17.173 45.244)" d="m79.202 100.52-68.488-15.162 47.375-51.732 10.557 33.447z" />`
+                <circle cx="64.5" cy = "64.5" r = "58.417" />
+                <path transform="matrix(.68898 -.63178 .63178 .68898 -17.173 45.244)" d="m79.202 100.52-68.488-15.162 47.375-51.732 10.557 33.447z" />`
         } else {
             autoplay.innerHTML = `
-                                            <circle cx="64.5" cy="64.5" r="58.417"/>
-                                            <g transform="matrix(.93515 0 0 1 6.7155 -.10065)">
-                                            <path d="m45 95h9.9833v-60h-9.9833z"/>
-                                            <path d="m70 95h9.9833v-60h-9.9833z"/>
-                                            </g>`
+                <circle cx="64.5" cy="64.5" r="58.417"/>
+                <g transform="matrix(.93515 0 0 1 6.7155 -.10065)">
+                <path d="m45 95h9.9833v-60h-9.9833z"/>
+                <path d="m70 95h9.9833v-60h-9.9833z"/>
+                </g>`
         }
     }
 
 
     //*                                  Slide Number
-
     createNumber() {
         const DISPLAY = this.slider.querySelector('.count')
         if (!this.currentItem) {
@@ -236,7 +217,6 @@ class Slider extends TouchHandler {
     }
 
     //*                                  Item Loop
-
     createLoop() {
         this.element.insertBefore(
             this.items[this.items.length - 1].cloneNode(false),
@@ -247,14 +227,14 @@ class Slider extends TouchHandler {
     }
 
     sliderLoop(direction, speed) {
-        direction ? this.loopNext(speed) : this.loopPrevious(speed)
+        direction ? this.loopNext(speed) : this.loopPrevious(speed) // direction = 0 (previous) or 1 (next)
     }
 
     loopPrevious(speed) {
         let end = () => {
             this.moveTo(this.items.length - 2, 0)
-            this.element.removeEventListener('transitionend', end)
             this.animating = false
+            this.element.removeEventListener('transitionend', end)
         }
         this.element.style.transition = `left ${speed}ms`
         this._previous()
@@ -264,17 +244,18 @@ class Slider extends TouchHandler {
     loopNext(speed) {
         let end = () => {
             this.moveTo(1, 0)
-            this.element.removeEventListener('transitionend', end)
             this.animating = false
+            this.element.removeEventListener('transitionend', end)
         }
         this.element.style.transition = `left ${speed}ms`
         this._next()
+        this.currentItem = 1
+        this.activeBubble()
         this.element.addEventListener('transitionend', end)
     }
 
 
     //*                                  Listeners
-
     listeners() {
         let arrows = [...this.slider.getElementsByClassName('arrow')]
         arrows.forEach((arrow, i) => arrow.addEventListener('click', () => {
@@ -300,8 +281,7 @@ class Slider extends TouchHandler {
 
 
     //*                                 Slider movement
-
-    // Might switch all of this to a dispatch-table
+    // Might switch all of this to a dispatch table
     moveTo(input, speed, condition) {
         if (!this.animating) {
             this.element.style.transition = `left ${speed}ms`
